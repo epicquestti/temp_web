@@ -1,3 +1,4 @@
+import ApplicationContextControll from "@/context/ApplicationContext";
 import createEmotionCache from "@/styles/createcache";
 import theme from "@/styles/theme";
 import { CacheProvider, EmotionCache } from "@emotion/react";
@@ -22,7 +23,9 @@ export default function App(props: MyAppProps) {
       </Head>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Component {...pageProps} />
+        <ApplicationContextControll>
+          <Component {...pageProps} />
+        </ApplicationContextControll>
       </ThemeProvider>
     </CacheProvider>
   );
