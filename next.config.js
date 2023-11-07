@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+module.exports = {
   reactStrictMode: true,
+  serverRuntimeConfig: {
+    api: "http://localhost:4000/api/web",
+  },
 };
-
-module.exports = nextConfig;

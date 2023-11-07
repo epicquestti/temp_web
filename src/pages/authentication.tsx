@@ -1,5 +1,7 @@
+import { apiResponse } from "@/lib/fetchApi/fetchApiProperties";
 import {
   ArrowBack,
+  Close,
   LinkOff,
   LinkSharp,
   Send,
@@ -7,32 +9,96 @@ import {
   VisibilityOff,
 } from "@mui/icons-material";
 import {
+  Backdrop,
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   FormControlLabel,
   Grid,
   Icon,
   IconButton,
   InputAdornment,
   Paper,
+  Snackbar,
   TextField,
   Typography,
 } from "@mui/material";
+import axios, { AxiosResponse } from "axios";
 import { NextPage } from "next";
 import { useState } from "react";
 
-const Authentication: NextPage = () => {
+export async function getStaticProps() {
+  return {
+    props: {
+      api: process.env.API,
+    },
+  };
+}
+
+const Authentication: NextPage<{ api: string }> = (props) => {
+  const [user, setUser] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [keepConnected, setKeepConnected] = useState<boolean>(false);
+
   const [showPass, setShowPass] = useState<boolean>(false);
   const [actualPass, setActualPass] = useState<boolean>(false);
   const [newPass, setNewPass] = useState<boolean>(false);
   const [confirmPass, setconfirmNewPass] = useState<boolean>(false);
   const [showFrame, setShowFrame] = useState<"confirm" | "login" | "recovery">(
-    "confirm"
+    "login"
   );
   const [recoverByEmail, setRecoverByEmail] = useState<boolean>(true);
   const [recoverByPhone, setRecoverByPhone] = useState<boolean>(false);
+
+  const [showSnack, setShowSnack] = useState<boolean>(false);
+  const [messageSnack, setMessageSnack] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const AuthorizeUser = async () => {
+    try {
+      if (!user) throw new Error("Entre com o usuário.");
+      if (!password) throw new Error("Entre com a senha do usuário.");
+
+      setLoading(true);
+
+      const axiosInstance = axios.create({
+        baseURL: props.api,
+      });
+
+      const response: AxiosResponse<apiResponse> = await axiosInstance.post(
+        "/users/login",
+        {
+          login: user,
+          password: password,
+          keepConnected: keepConnected,
+        }
+      );
+
+      if (response.status === 200 && response.data.success) {
+        if (response.data.data.needChange) {
+          setShowFrame("confirm");
+          setMessageSnack(
+            "Sua conta necessita de atenção. Por favor altere sua senha para retomar seu acesso."
+          );
+          setShowSnack(true);
+          setLoading(false);
+          setTimeout(() => {
+            setShowSnack(false);
+          }, 6000);
+          return;
+        }
+      } else throw new Error(response.data.message);
+
+      setLoading(false);
+    } catch (error: any) {
+      setMessageSnack(error.message);
+      setShowSnack(true);
+      setTimeout(() => {
+        setShowSnack(false);
+      }, 6000);
+    }
+  };
 
   return (
     <Box
@@ -180,6 +246,7 @@ const Authentication: NextPage = () => {
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <TextField
+                      value={user}
                       variant="standard"
                       label="usuário"
                       fullWidth
@@ -190,10 +257,12 @@ const Authentication: NextPage = () => {
                           </InputAdornment>
                         ),
                       }}
+                      onChange={(e) => setUser(e.target.value)}
                     />
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <TextField
+                      value={password}
                       variant="standard"
                       label="senha"
                       fullWidth
@@ -216,6 +285,7 @@ const Authentication: NextPage = () => {
                           </InputAdornment>
                         ),
                       }}
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
@@ -251,7 +321,11 @@ const Authentication: NextPage = () => {
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Button fullWidth variant="contained">
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={AuthorizeUser}
+                    >
                       Acessar
                     </Button>
                   </Grid>
@@ -381,6 +455,32 @@ const Authentication: NextPage = () => {
           ></Box>
         </Grid>
       </Grid>
+      <Snackbar
+        open={showSnack}
+        autoHideDuration={6000}
+        onClose={() => {
+          setShowSnack(false);
+        }}
+        message={messageSnack}
+        action={
+          <IconButton
+            size="small"
+            aria-label="close"
+            color="inherit"
+            onClick={() => {
+              setShowSnack(false);
+            }}
+          >
+            <Close fontSize="small" />
+          </IconButton>
+        }
+      />
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={loading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 };
