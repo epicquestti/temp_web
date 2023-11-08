@@ -39,6 +39,11 @@ export async function getStaticProps() {
 const Authentication: NextPage<{ api: string }> = (props) => {
   const [user, setUser] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [confirmActualPassword, setConfirmActualPassword] =
+    useState<string>("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState<string>("");
+  const [confirmRetypePassword, setConfirmRetypePassword] =
+    useState<string>("");
   const [keepConnected, setKeepConnected] = useState<boolean>(false);
 
   const [showPass, setShowPass] = useState<boolean>(false);
@@ -92,6 +97,69 @@ const Authentication: NextPage<{ api: string }> = (props) => {
 
       setLoading(false);
     } catch (error: any) {
+      setMessageSnack(error.message);
+      setShowSnack(true);
+      setTimeout(() => {
+        setShowSnack(false);
+      }, 6000);
+    }
+  };
+
+  const ConfirmNewPassword = async () => {
+    try {
+      if (!user) {
+        setShowFrame("login");
+        setUser("");
+        setPassword("");
+        setConfirmActualPassword("");
+        setConfirmNewPassword("");
+        setConfirmRetypePassword("");
+        setKeepConnected(false);
+        throw new Error(
+          "Erro ao verificar o usuário. por favor refaça o login."
+        );
+      }
+
+      if (!confirmActualPassword) throw new Error("Insirá a senha atual.");
+      if (!confirmNewPassword) throw new Error("Insirá a nova senha atual.");
+      if (!confirmRetypePassword)
+        throw new Error("Insira a confirmação da nova senha atual.");
+
+      if (confirmNewPassword !== confirmRetypePassword) {
+        throw new Error(
+          "As senhas em 'nova senha' e 'confirme sua nova senha' não coincidem, verifique."
+        );
+      }
+
+      setLoading(true);
+
+      const axiosInstance = axios.create({
+        baseURL: props.api,
+      });
+
+      const response: AxiosResponse<apiResponse> = await axiosInstance.post(
+        "/users/change-my-password",
+        {
+          login: user,
+          confirmActualPassword: confirmActualPassword,
+          confirmNewPassword: confirmNewPassword,
+        }
+      );
+
+      if (response.status === 200 && response.data.success) {
+        setLoading(false);
+
+        setShowFrame("login");
+
+        setMessageSnack("Alteração de senha realizado com sucesso.");
+        setShowSnack(true);
+
+        setTimeout(() => {
+          setShowSnack(false);
+        }, 6000);
+      } else throw new Error(response.data.message);
+    } catch (error: any) {
+      setLoading(false);
       setMessageSnack(error.message);
       setShowSnack(true);
       setTimeout(() => {
@@ -356,6 +424,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
 
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <TextField
+                      value={confirmActualPassword}
                       variant="standard"
                       label="senha atual"
                       fullWidth
@@ -373,10 +442,14 @@ const Authentication: NextPage<{ api: string }> = (props) => {
                           </InputAdornment>
                         ),
                       }}
+                      onChange={(e) => {
+                        setConfirmActualPassword(e.target.value);
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <TextField
+                      value={confirmNewPassword}
                       variant="standard"
                       label="nova senha"
                       fullWidth
@@ -394,10 +467,14 @@ const Authentication: NextPage<{ api: string }> = (props) => {
                           </InputAdornment>
                         ),
                       }}
+                      onChange={(e) => {
+                        setConfirmNewPassword(e.target.value);
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <TextField
+                      value={confirmRetypePassword}
                       variant="standard"
                       label="confirme sua nova senha"
                       fullWidth
@@ -415,10 +492,18 @@ const Authentication: NextPage<{ api: string }> = (props) => {
                           </InputAdornment>
                         ),
                       }}
+                      onChange={(e) => {
+                        setConfirmRetypePassword(e.target.value);
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Button fullWidth variant="contained" endIcon={<Send />}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      endIcon={<Send />}
+                      onClick={ConfirmNewPassword}
+                    >
                       Alterar minha senha
                     </Button>
                   </Grid>
