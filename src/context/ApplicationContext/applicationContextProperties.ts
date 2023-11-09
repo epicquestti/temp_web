@@ -1,5 +1,5 @@
 export type appMenu = {
-  [key: string]: { name: string; path: string; icon: string | null };
+  [key: string]: [{ name: string; path: string; icon: string | null }];
 };
 
 export type user = {

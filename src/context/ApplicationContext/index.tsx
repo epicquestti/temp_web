@@ -1,4 +1,16 @@
-import { FC, ReactNode, createContext, useContext, useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import appConfig from "@/config/appConfig";
+import { apiResponse } from "@/lib/fetchApi/fetchApiProperties";
+import axios, { AxiosResponse } from "axios";
+import {
+  FC,
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { useCookies } from "react-cookie";
 import {
   applicationContextProperties,
   user,
@@ -24,7 +36,57 @@ export function useApplicationContext(): applicationContextProperties {
 const ApplicationContextControll: FC<{ children?: ReactNode }> = ({
   ...props
 }) => {
+  const [cookie, setCookie, removeCookie] = useCookies([appConfig.identifier]);
   const [usuario, setUsuario] = useState<user | undefined>(undefined);
+  const [contingencyControll, setContingencyControll] =
+    useState<boolean>(false);
+
+  useEffect(() => {
+    const ls = localStorage.getItem(appConfig.identifier);
+    const { epicquest } = cookie;
+    if (ls) {
+      const u = JSON.parse(ls);
+      if (u) setUsuario(u);
+    } else if (epicquest) setContingencyControll(true);
+  }, []);
+
+  useEffect(() => {
+    if (usuario) {
+      localStorage.setItem(appConfig.identifier, JSON.stringify(usuario));
+      setCookie(appConfig.identifier, usuario.token, {
+        path: "/",
+      });
+    }
+  }, [usuario]);
+
+  useEffect(() => {
+    (async () => {
+      if (contingencyControll) {
+        if (cookie.epicquest) {
+          const axiosInstance = axios.create({
+            baseURL: "http://localhost:4000/api/web",
+          });
+
+          const response: AxiosResponse<apiResponse> = await axiosInstance.post(
+            "/users/reauthentication",
+            {
+              token: cookie.epicquest,
+            }
+          );
+
+          if (response.data.success) {
+            setUsuario(response.data.data);
+          } else {
+            window.location.href = "/authentication";
+          }
+        } else {
+          window.location.href = "/authentication";
+        }
+
+        setContingencyControll(false);
+      }
+    })();
+  }, [contingencyControll]);
 
   const login = (u: user) => {
     setUsuario(u);
@@ -32,14 +94,15 @@ const ApplicationContextControll: FC<{ children?: ReactNode }> = ({
 
   const logout = () => {
     setUsuario(undefined);
+    localStorage.removeItem(appConfig.identifier);
+    removeCookie(appConfig.identifier);
+    window.location.href = "/authentication";
   };
 
   const getToken = (): string => {
     if (!usuario) throw new Error("Usuário ausente.");
     return usuario.token;
   };
-
-  //-->
 
   const value: applicationContextProperties = {
     usuario,

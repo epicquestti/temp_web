@@ -1,3 +1,4 @@
+import { useApplicationContext } from "@/context/ApplicationContext";
 import { apiResponse } from "@/lib/fetchApi/fetchApiProperties";
 import {
   ArrowBack,
@@ -26,6 +27,7 @@ import {
 } from "@mui/material";
 import axios, { AxiosResponse } from "axios";
 import { NextPage } from "next";
+import { useRouter } from "next/router";
 import { useState } from "react";
 
 export async function getStaticProps() {
@@ -37,6 +39,8 @@ export async function getStaticProps() {
 }
 
 const Authentication: NextPage<{ api: string }> = (props) => {
+  const router = useRouter();
+  const appContext = useApplicationContext();
   const [user, setUser] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmActualPassword, setConfirmActualPassword] =
@@ -45,7 +49,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
   const [confirmRetypePassword, setConfirmRetypePassword] =
     useState<string>("");
   const [keepConnected, setKeepConnected] = useState<boolean>(false);
-
+  const [token, setToken] = useState<string>("");
   const [showPass, setShowPass] = useState<boolean>(false);
   const [actualPass, setActualPass] = useState<boolean>(false);
   const [newPass, setNewPass] = useState<boolean>(false);
@@ -55,7 +59,6 @@ const Authentication: NextPage<{ api: string }> = (props) => {
   );
   const [recoverByEmail, setRecoverByEmail] = useState<boolean>(true);
   const [recoverByPhone, setRecoverByPhone] = useState<boolean>(false);
-
   const [showSnack, setShowSnack] = useState<boolean>(false);
   const [messageSnack, setMessageSnack] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -82,6 +85,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
 
       if (response.status === 200 && response.data.success) {
         if (response.data.data.needChange) {
+          setToken(response.data.data.token);
           setShowFrame("confirm");
           setMessageSnack(
             "Sua conta necessita de atenção. Por favor altere sua senha para retomar seu acesso."
@@ -92,13 +96,16 @@ const Authentication: NextPage<{ api: string }> = (props) => {
             setShowSnack(false);
           }, 6000);
           return;
+        } else {
+          appContext.login(response.data.data);
+          router.push("/");
+          return;
         }
       } else throw new Error(response.data.message);
-
-      setLoading(false);
     } catch (error: any) {
       setMessageSnack(error.message);
       setShowSnack(true);
+      setLoading(false);
       setTimeout(() => {
         setShowSnack(false);
       }, 6000);
@@ -138,20 +145,20 @@ const Authentication: NextPage<{ api: string }> = (props) => {
       });
 
       const response: AxiosResponse<apiResponse> = await axiosInstance.post(
-        "/users/change-my-password",
+        "/users/confirm-change-my-password",
         {
-          login: user,
-          confirmActualPassword: confirmActualPassword,
-          confirmNewPassword: confirmNewPassword,
+          token: token,
+          actualPassword: confirmActualPassword,
+          newPassword: confirmNewPassword,
         }
       );
 
       if (response.status === 200 && response.data.success) {
         setLoading(false);
-
         setShowFrame("login");
-
-        setMessageSnack("Alteração de senha realizado com sucesso.");
+        setMessageSnack(
+          response.data.message || "Alteração de senha realizado com sucesso."
+        );
         setShowSnack(true);
 
         setTimeout(() => {

@@ -1,6 +1,7 @@
 const appConfig = {
+  identifier: "epicquest",
   api: {
-    url: "http://localhost:4000/api/web",
+    url: process.env.API,
   },
 };
 
