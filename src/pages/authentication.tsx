@@ -1,5 +1,5 @@
 import { useApplicationContext } from "@/context/ApplicationContext";
-import { apiResponse } from "@/lib/fetchApi/fetchApiProperties";
+import { defaultResponse } from "@/lib/fetchApi/fetchApiProperties";
 import {
   ArrowBack,
   Close,
@@ -74,8 +74,8 @@ const Authentication: NextPage<{ api: string }> = (props) => {
         baseURL: props.api,
       });
 
-      const response: AxiosResponse<apiResponse> = await axiosInstance.post(
-        "/users/login",
+      const response: AxiosResponse<defaultResponse> = await axiosInstance.post(
+        "/users/authentication",
         {
           login: user,
           password: password,
@@ -144,7 +144,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
         baseURL: props.api,
       });
 
-      const response: AxiosResponse<apiResponse> = await axiosInstance.post(
+      const response: AxiosResponse<defaultResponse> = await axiosInstance.post(
         "/users/confirm-change-my-password",
         {
           token: token,

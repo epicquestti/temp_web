@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import appConfig from "@/config/appConfig";
-import { apiResponse } from "@/lib/fetchApi/fetchApiProperties";
+import { defaultResponse } from "@/lib/fetchApi/fetchApiProperties";
 import axios, { AxiosResponse } from "axios";
 import {
   FC,
@@ -64,15 +64,13 @@ const ApplicationContextControll: FC<{ children?: ReactNode }> = ({
       if (contingencyControll) {
         if (cookie.epicquest) {
           const axiosInstance = axios.create({
-            baseURL: "http://localhost:4000/api/web",
+            baseURL: appConfig.api.url,
           });
 
-          const response: AxiosResponse<apiResponse> = await axiosInstance.post(
-            "/users/reauthentication",
-            {
+          const response: AxiosResponse<defaultResponse> =
+            await axiosInstance.post("/users/reauthentication", {
               token: cookie.epicquest,
-            }
-          );
+            });
 
           if (response.data.success) {
             setUsuario(response.data.data);

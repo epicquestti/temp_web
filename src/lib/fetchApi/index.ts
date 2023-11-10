@@ -1,52 +1,31 @@
 import appConfig from "@/config/appConfig";
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { apiResponse } from "./fetchApiProperties";
-
-const constructInstance = (): AxiosInstance => {
-  try {
-    return axios.create({
-      baseURL: appConfig.api.url,
-      headers: {
-        Authorization: "",
-      },
-    });
-  } catch (error: any) {
-    throw new Error(error.message);
-  }
-};
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import { defaultResponse } from "./fetchApiProperties";
 
 const get = async (
   url: string,
   config?: AxiosRequestConfig<any>
-): Promise<apiResponse> => {
+): Promise<defaultResponse> => {
   try {
-    const instance = await constructInstance();
+    const instance = axios.create({
+      baseURL: appConfig.api.url,
+    });
 
-    const responseHttpRequest: AxiosResponse<apiResponse> = await instance.get(
-      url,
-      config
-    );
+    const responseHttpRequest: AxiosResponse<defaultResponse> =
+      await instance.get(url, config);
 
     if (responseHttpRequest.status === 200) {
-      if (responseHttpRequest.data.redirect) {
+      if (responseHttpRequest.data.data) {
         return {
-          success: true,
+          success: responseHttpRequest.data.success,
+          data: responseHttpRequest.data.data,
           message: responseHttpRequest.data.message,
-          redirect: responseHttpRequest.data.redirect,
         };
       } else {
-        if (responseHttpRequest.data.data) {
-          return {
-            success: responseHttpRequest.data.success,
-            data: responseHttpRequest.data.data,
-            message: responseHttpRequest.data.message,
-          };
-        } else {
-          return {
-            success: responseHttpRequest.data.success,
-            message: responseHttpRequest.data.message,
-          };
-        }
+        return {
+          success: responseHttpRequest.data.success,
+          message: responseHttpRequest.data.message,
+        };
       }
     } else {
       return {
@@ -66,36 +45,27 @@ const post = async (
   url: string,
   body?: any,
   config?: AxiosRequestConfig<any>
-): Promise<apiResponse> => {
+): Promise<defaultResponse> => {
   try {
-    const instance = await constructInstance();
+    const instance = axios.create({
+      baseURL: appConfig.api.url,
+    });
 
-    const responseHttpRequest: AxiosResponse<apiResponse> = await instance.post(
-      url,
-      body,
-      config
-    );
+    const responseHttpRequest: AxiosResponse<defaultResponse> =
+      await instance.post(url, body, config);
 
     if (responseHttpRequest.status === 200) {
-      if (responseHttpRequest.data.redirect) {
+      if (responseHttpRequest.data.data) {
         return {
-          success: true,
+          success: responseHttpRequest.data.success,
+          data: responseHttpRequest.data.data,
           message: responseHttpRequest.data.message,
-          redirect: responseHttpRequest.data.redirect,
         };
       } else {
-        if (responseHttpRequest.data.data) {
-          return {
-            success: responseHttpRequest.data.success,
-            data: responseHttpRequest.data.data,
-            message: responseHttpRequest.data.message,
-          };
-        } else {
-          return {
-            success: responseHttpRequest.data.success,
-            message: responseHttpRequest.data.message,
-          };
-        }
+        return {
+          success: responseHttpRequest.data.success,
+          message: responseHttpRequest.data.message,
+        };
       }
     } else {
       return {
@@ -115,36 +85,27 @@ const put = async (
   url: string,
   body?: any,
   config?: AxiosRequestConfig<any>
-): Promise<apiResponse> => {
+): Promise<defaultResponse> => {
   try {
-    const instance = await constructInstance();
+    const instance = axios.create({
+      baseURL: appConfig.api.url,
+    });
 
-    const responseHttpRequest: AxiosResponse<apiResponse> = await instance.put(
-      url,
-      body,
-      config
-    );
+    const responseHttpRequest: AxiosResponse<defaultResponse> =
+      await instance.put(url, body, config);
 
     if (responseHttpRequest.status === 200) {
-      if (responseHttpRequest.data.redirect) {
+      if (responseHttpRequest.data.data) {
         return {
-          success: true,
+          success: responseHttpRequest.data.success,
+          data: responseHttpRequest.data.data,
           message: responseHttpRequest.data.message,
-          redirect: responseHttpRequest.data.redirect,
         };
       } else {
-        if (responseHttpRequest.data.data) {
-          return {
-            success: responseHttpRequest.data.success,
-            data: responseHttpRequest.data.data,
-            message: responseHttpRequest.data.message,
-          };
-        } else {
-          return {
-            success: responseHttpRequest.data.success,
-            message: responseHttpRequest.data.message,
-          };
-        }
+        return {
+          success: responseHttpRequest.data.success,
+          message: responseHttpRequest.data.message,
+        };
       }
     } else {
       return {
@@ -163,33 +124,27 @@ const put = async (
 const del = async (
   url: string,
   config?: AxiosRequestConfig<any>
-): Promise<apiResponse> => {
+): Promise<defaultResponse> => {
   try {
-    const instance = await constructInstance();
+    const instance = axios.create({
+      baseURL: appConfig.api.url,
+    });
 
-    const responseHttpRequest: AxiosResponse<apiResponse> =
+    const responseHttpRequest: AxiosResponse<defaultResponse> =
       await instance.delete(url, config);
 
     if (responseHttpRequest.status === 200) {
-      if (responseHttpRequest.data.redirect) {
+      if (responseHttpRequest.data.data) {
         return {
-          success: true,
+          success: responseHttpRequest.data.success,
+          data: responseHttpRequest.data.data,
           message: responseHttpRequest.data.message,
-          redirect: responseHttpRequest.data.redirect,
         };
       } else {
-        if (responseHttpRequest.data.data) {
-          return {
-            success: responseHttpRequest.data.success,
-            data: responseHttpRequest.data.data,
-            message: responseHttpRequest.data.message,
-          };
-        } else {
-          return {
-            success: responseHttpRequest.data.success,
-            message: responseHttpRequest.data.message,
-          };
-        }
+        return {
+          success: responseHttpRequest.data.success,
+          message: responseHttpRequest.data.message,
+        };
       }
     } else {
       return {
