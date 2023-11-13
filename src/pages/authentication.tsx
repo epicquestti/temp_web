@@ -57,6 +57,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
   const [showFrame, setShowFrame] = useState<"confirm" | "login" | "recovery">(
     "login"
   );
+  const [recoveryContact, setRecoveryContact] = useState<string>("");
   const [recoverByEmail, setRecoverByEmail] = useState<boolean>(true);
   const [recoverByPhone, setRecoverByPhone] = useState<boolean>(false);
   const [showSnack, setShowSnack] = useState<boolean>(false);
@@ -175,6 +176,51 @@ const Authentication: NextPage<{ api: string }> = (props) => {
     }
   };
 
+  const RequestRecoveryPassword = async () => {
+    try {
+      if (!recoveryContact)
+        throw new Error(
+          `Por favor, entre com seu ${
+            recoverByEmail ? "email" : recoverByPhone ? "Nº de celular" : ""
+          }`
+        );
+
+      setLoading(true);
+
+      const axiosInstance = axios.create({
+        baseURL: props.api,
+      });
+
+      const response: AxiosResponse<defaultResponse> = await axiosInstance.post(
+        "/users/password-recovery-request",
+        {
+          recoveryType: recoverByEmail ? "email" : recoverByPhone ? "cell" : "",
+          recoveryContact: recoveryContact,
+        }
+      );
+
+      if (response.status === 200 && response.data.success) {
+        setLoading(false);
+        setShowFrame("login");
+        setMessageSnack(
+          response.data.message || "Alteração de senha realizado com sucesso."
+        );
+        setShowSnack(true);
+
+        setTimeout(() => {
+          setShowSnack(false);
+        }, 6000);
+      } else throw new Error(response.data.message);
+    } catch (error: any) {
+      setLoading(false);
+      setMessageSnack(error.message);
+      setShowSnack(true);
+      setTimeout(() => {
+        setShowSnack(false);
+      }, 6000);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -254,6 +300,10 @@ const Authentication: NextPage<{ api: string }> = (props) => {
 
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <TextField
+                      value={recoveryContact}
+                      onChange={(e) => {
+                        setRecoveryContact(e.target.value);
+                      }}
                       variant="standard"
                       label={
                         recoverByEmail
@@ -281,7 +331,11 @@ const Authentication: NextPage<{ api: string }> = (props) => {
                     />
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Button fullWidth variant="contained">
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={RequestRecoveryPassword}
+                    >
                       recuperar senha
                     </Button>
                   </Grid>
