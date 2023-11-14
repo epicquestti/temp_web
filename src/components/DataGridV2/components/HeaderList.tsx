@@ -58,7 +58,7 @@ export const HeaderList = (
                       ]
                     : "auto",
               }}
-              key={`header-${i}-item`}
+              key={`header-${i}-item-start-default`}
               align={list[i].align ? list[i].align : "left"}
             >
               {list[i].text}
@@ -79,7 +79,7 @@ export const HeaderList = (
                         ]
                       : "auto",
                 }}
-                key={`header-${i}-item`}
+                key={`header-${i}-item-end`}
                 align={list[i].align ? list[i].align : "left"}
               >
                 {list[i].text}
@@ -99,7 +99,7 @@ export const HeaderList = (
                         ]
                       : "auto",
                 }}
-                key={`header-${i}-item`}
+                key={`header-${i}-item-has-actions`}
                 align={list[i].align ? list[i].align : "left"}
               >
                 {list[i].text}
@@ -119,7 +119,7 @@ export const HeaderList = (
                       ]
                     : "auto",
               }}
-              key={`header-${i}-item`}
+              key={`header-${i}-item-default-no-identification`}
               align={list[i].align ? list[i].align : "left"}
             >
               {list[i].text}

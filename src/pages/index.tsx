@@ -5,16 +5,12 @@ import { useState } from "react";
 export default function Home() {
   const [loading, setLoading] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(true);
-  // useEffect(() => {
-  //   (async () => {
-  //     const asd = await fetchApi.get("/ping/pingTest");
-  //     console.log("resposta", asd);
-  //   })();
-  // });
+
   return (
     <ViewWrapper
       loading={loading}
       alerMessage="asdasdas"
+      showAlert={showAlert}
       closeAlert={() => {
         setShowAlert(false);
       }}

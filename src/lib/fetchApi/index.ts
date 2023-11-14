@@ -1,6 +1,6 @@
-import appConfig from "@/config/appConfig";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { defaultResponse } from "./fetchApiProperties";
+const apiUrl = "http://localhost:4000/api/web";
 
 const get = async (
   url: string,
@@ -8,7 +8,7 @@ const get = async (
 ): Promise<defaultResponse> => {
   try {
     const instance = axios.create({
-      baseURL: appConfig.api.url,
+      baseURL: apiUrl,
     });
 
     const responseHttpRequest: AxiosResponse<defaultResponse> =
@@ -48,7 +48,7 @@ const post = async (
 ): Promise<defaultResponse> => {
   try {
     const instance = axios.create({
-      baseURL: appConfig.api.url,
+      baseURL: apiUrl,
     });
 
     const responseHttpRequest: AxiosResponse<defaultResponse> =
@@ -88,7 +88,7 @@ const put = async (
 ): Promise<defaultResponse> => {
   try {
     const instance = axios.create({
-      baseURL: appConfig.api.url,
+      baseURL: apiUrl,
     });
 
     const responseHttpRequest: AxiosResponse<defaultResponse> =
@@ -127,7 +127,7 @@ const del = async (
 ): Promise<defaultResponse> => {
   try {
     const instance = axios.create({
-      baseURL: appConfig.api.url,
+      baseURL: apiUrl,
     });
 
     const responseHttpRequest: AxiosResponse<defaultResponse> =

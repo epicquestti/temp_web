@@ -135,9 +135,11 @@ export const TableNode = (
             align={headers[i].align ? headers[i].align : "left"}
           >
             <Tooltip
-              title={listNode[headers[i].attrName as keyof typeof listNode]}
+              title={listNode[
+                headers[i].attrName as keyof typeof listNode
+              ].toString()}
             >
-              <Icon sx={{ color: listNode.iconColor }}>{listNode.icon}</Icon>
+              <Icon sx={{ color: listNode.color }}>{listNode.icon}</Icon>
             </Tooltip>
           </TableCell>
         );

@@ -98,8 +98,7 @@ const ApplicationContextControll: FC<{ children?: ReactNode }> = ({
   };
 
   const getToken = (): string => {
-    if (!usuario) throw new Error("Usuário ausente.");
-    return usuario.token;
+    return cookie.epicquest;
   };
 
   const value: applicationContextProperties = {
