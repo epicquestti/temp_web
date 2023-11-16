@@ -28,7 +28,7 @@ import {
 import axios, { AxiosResponse } from "axios";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { KeyboardEvent, useState } from "react";
 
 export async function getStaticProps() {
   return {
@@ -221,6 +221,22 @@ const Authentication: NextPage<{ api: string }> = (props) => {
     }
   };
 
+  const loginByEnterKeyPress = async (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter") await AuthorizeUser();
+  };
+
+  const RequestRecoveryPasswordByEnterKeyPress = async (
+    e: KeyboardEvent<HTMLDivElement>
+  ) => {
+    if (e.key === "Enter") await RequestRecoveryPassword();
+  };
+
+  const ConfirmNewPasswordByEnterKeyPress = async (
+    e: KeyboardEvent<HTMLDivElement>
+  ) => {
+    if (e.key === "Enter") await ConfirmNewPassword();
+  };
+
   return (
     <Box
       sx={{
@@ -300,6 +316,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
 
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <TextField
+                      onKeyDown={RequestRecoveryPasswordByEnterKeyPress}
                       value={recoveryContact}
                       onChange={(e) => {
                         setRecoveryContact(e.target.value);
@@ -379,6 +396,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
                       variant="standard"
                       label="usuário"
                       fullWidth
+                      onKeyDown={loginByEnterKeyPress}
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">
@@ -395,6 +413,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
                       variant="standard"
                       label="senha"
                       fullWidth
+                      onKeyDown={loginByEnterKeyPress}
                       type={showPass ? "text" : "password"}
                       InputProps={{
                         startAdornment: (
@@ -486,6 +505,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <TextField
                       value={confirmActualPassword}
+                      onKeyDown={ConfirmNewPasswordByEnterKeyPress}
                       variant="standard"
                       label="senha atual"
                       fullWidth
@@ -514,6 +534,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
                       variant="standard"
                       label="nova senha"
                       fullWidth
+                      onKeyDown={ConfirmNewPasswordByEnterKeyPress}
                       type={newPass ? "text" : "password"}
                       InputProps={{
                         endAdornment: (
@@ -538,6 +559,7 @@ const Authentication: NextPage<{ api: string }> = (props) => {
                       value={confirmRetypePassword}
                       variant="standard"
                       label="confirme sua nova senha"
+                      onKeyDown={ConfirmNewPasswordByEnterKeyPress}
                       fullWidth
                       type={confirmPass ? "text" : "password"}
                       InputProps={{

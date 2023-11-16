@@ -4,12 +4,13 @@ import { useState } from "react";
 
 export default function Home() {
   const [loading, setLoading] = useState<boolean>(false);
-  const [showAlert, setShowAlert] = useState<boolean>(true);
+  const [showAlert, setShowAlert] = useState<boolean>(false);
+  const [alertMessage, setAlertMessage] = useState<string>("");
 
   return (
     <ViewWrapper
       loading={loading}
-      alerMessage="asdasdas"
+      alerMessage="alertMessage"
       showAlert={showAlert}
       closeAlert={() => {
         setShowAlert(false);
@@ -26,7 +27,7 @@ export default function Home() {
             <Grid container spacing={4}>
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                 <Typography variant="body2">
-                  <b>Quantidade total de usuários</b>
+                  <b>Total de usuários</b>
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
