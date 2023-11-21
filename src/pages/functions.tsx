@@ -129,12 +129,21 @@ export default function Functions() {
                   onChange={(e) => {}}
                 />
               </Grid>
-              <Grid item xs={12} sm={12} md={5} lg={5} xl={5}>
+              <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
                 <TextField
                   variant="standard"
                   label="Identificação"
                   fullWidth
                   placeholder="Insira o nome da função"
+                  onChange={(e) => {}}
+                />
+              </Grid>
+              <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
+                <TextField
+                  variant="standard"
+                  label="icone"
+                  fullWidth
+                  placeholder="insira um icone presente em https://materialui.co/icons"
                   onChange={(e) => {}}
                 />
               </Grid>
