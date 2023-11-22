@@ -200,7 +200,11 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
               <ListItem>
                 <Typography variant="caption">menu do usuário</Typography>
               </ListItem>
-              <ListItemButton>
+              <ListItemButton
+                onClick={() => {
+                  router.push("/userPerfil");
+                }}
+              >
                 <ListItemIcon>
                   <Icon>contact_page</Icon>
                 </ListItemIcon>

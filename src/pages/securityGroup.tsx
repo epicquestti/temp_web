@@ -1,13 +1,12 @@
 import QHGrid from "@/components/DataGridV2";
 import ViewWrapper from "@/components/ViewWrapper";
-import { Add, Home } from "@mui/icons-material";
+import { Home } from "@mui/icons-material";
 import {
   Autocomplete,
   AutocompleteRenderInputParams,
   Box,
   Button,
   Checkbox,
-  Fab,
   FormControlLabel,
   Grid,
   Paper,
@@ -52,15 +51,6 @@ export default function SecurityGroup() {
         setShowAlert(false);
       }}
       title="Grupos de segurança"
-      outsideContent={
-        <Box
-          sx={{ width: "100%", display: "flex", justifyContent: "flex-end" }}
-        >
-          <Fab color="primary" aria-label="add">
-            <Add />
-          </Fab>
-        </Box>
-      }
     >
       <Grid container spacing={2}>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
