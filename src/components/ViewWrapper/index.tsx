@@ -202,7 +202,7 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
               </ListItem>
               <ListItemButton
                 onClick={() => {
-                  router.push("/userPerfil");
+                  router.push("/userProfile");
                 }}
               >
                 <ListItemIcon>

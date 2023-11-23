@@ -13,14 +13,20 @@
     "@emotion/server": "^11.11.0",
     "@emotion/styled": "^11.11.0",
     "@fontsource/roboto": "^5.0.8",
+    "@hookform/resolvers": "^3.3.2",
     "@mui/icons-material": "^5.14.16",
     "@mui/material": "^5.14.16",
     "axios": "^1.6.0",
+    "install": "^0.13.0",
     "material-ui-popup-state": "^5.0.10",
     "next": "14.0.1",
+    "npm": "^10.2.4",
     "react": "^18",
     "react-cookie": "^6.1.1",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-hook-form": "^7.48.2",
+    "use-mask-input": "^3.3.7",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20",
