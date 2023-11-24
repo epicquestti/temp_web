@@ -208,11 +208,7 @@ export default function SecurityGroup() {
                   Crie novs grupos ou edite grupos existentes
                 </Typography>
               </Grid>
-              <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                <Button variant="outlined" fullWidth>
-                  Salvar
-                </Button>
-              </Grid>
+
               <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
                 <TextField
                   variant="standard"
@@ -339,6 +335,20 @@ export default function SecurityGroup() {
                     },
                   ]}
                 />
+              </Grid>
+
+              <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "end",
+                  }}
+                >
+                  <Button type="submit" sx={{ width: 250 }} variant="outlined">
+                    Salvar
+                  </Button>
+                </Box>
               </Grid>
             </Grid>
           </Paper>

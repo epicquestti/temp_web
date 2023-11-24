@@ -1,5 +1,6 @@
 import SpanError from "@/components/SpanError";
 import ViewWrapper from "@/components/ViewWrapper";
+import { cepMask, phoneMask } from "@/lib/masks";
 import {
   userProfileForm,
   userProfileSchema,
@@ -7,6 +8,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CloudUpload } from "@mui/icons-material";
 import {
+  Autocomplete,
   Avatar,
   Box,
   Button,
@@ -17,7 +19,6 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useHookFormMask } from "use-mask-input";
 
 export default function SecurityGroup() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -32,7 +33,6 @@ export default function SecurityGroup() {
   } = useForm<userProfileForm>({
     resolver: zodResolver(userProfileSchema),
   });
-  const registerWithMask = useHookFormMask(register);
 
   function onSubmitFuction(data: userProfileForm) {
     console.log(data);
@@ -45,8 +45,9 @@ export default function SecurityGroup() {
       setLoading(false);
       reset({
         name: "Algo da Api",
-        cel: "16998761113",
+        cel: phoneMask("16998761113"),
         email: "asdad@email.com",
+        city: "Franca",
       });
     }, 5000);
   }, []);
@@ -162,7 +163,11 @@ export default function SecurityGroup() {
                     variant="outlined"
                     label="Celular"
                     placeholder="Entre com seu celular  ex: (99)699999-9999"
-                    {...registerWithMask("cel", ["(99)99999-9999"])}
+                    {...register("cel")}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      e.target.value = phoneMask(value);
+                    }}
                   />
                   {errors.cel && <SpanError errorText={errors.cel.message} />}
                 </Grid>
@@ -189,6 +194,10 @@ export default function SecurityGroup() {
                     label="Telefone"
                     placeholder="entre com seu telefone residencial ex: (99)9999-9999"
                     {...register("phone")}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      e.target.value = phoneMask(value);
+                    }}
                   />
                   {errors.phone && (
                     <SpanError errorText={errors.phone.message} />
@@ -213,6 +222,10 @@ export default function SecurityGroup() {
                     label="Cep"
                     placeholder="Entre com o cep"
                     {...register("cep")}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      e.target.value = cepMask(value);
+                    }}
                   />
                   {errors.cep && <SpanError errorText={errors.cep.message} />}
                 </Grid>
@@ -259,7 +272,25 @@ export default function SecurityGroup() {
                   )}
                 </Grid>
                 <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                  <TextField
+                  <Autocomplete
+                    options={["Franca"]}
+                    fullWidth
+                    renderInput={(params: any) => {
+                      delete params.InputLabelProps;
+                      return (
+                        <TextField
+                          InputLabelProps={{ shrink: true }}
+                          label={"Cidade"}
+                          error={errors.city ? true : false}
+                          placeholder="Selecione a cidade"
+                          {...params}
+                          {...register("city")}
+                        />
+                      );
+                    }}
+                  />
+
+                  {/* <TextField
                     InputLabelProps={{ shrink: true }}
                     error={errors.city ? true : false}
                     fullWidth
@@ -267,7 +298,7 @@ export default function SecurityGroup() {
                     label="Cidade"
                     placeholder="Selecione a cidade"
                     {...register("city")}
-                  />
+                  /> */}
                   {errors.city && <SpanError errorText={errors.city.message} />}
                 </Grid>
                 <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
