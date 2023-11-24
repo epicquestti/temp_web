@@ -20,7 +20,10 @@ export const userProfileSchema = z.object({
   street: z.string(),
   number: z.string(),
   neighborhood: z.string(),
-  city: z.string(),
+  city: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
   state: z.string(),
   obs: z.string(),
 });

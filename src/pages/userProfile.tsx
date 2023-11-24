@@ -18,7 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 export default function SecurityGroup() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -29,7 +29,9 @@ export default function SecurityGroup() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
+    control,
   } = useForm<userProfileForm>({
     resolver: zodResolver(userProfileSchema),
   });
@@ -47,7 +49,7 @@ export default function SecurityGroup() {
         name: "Algo da Api",
         cel: phoneMask("16998761113"),
         email: "asdad@email.com",
-        city: "Franca",
+        city: { id: 1, name: "Franca" },
       });
     }, 5000);
   }, []);
@@ -272,33 +274,38 @@ export default function SecurityGroup() {
                   )}
                 </Grid>
                 <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                  <Autocomplete
-                    options={["Franca"]}
-                    fullWidth
-                    renderInput={(params: any) => {
-                      delete params.InputLabelProps;
-                      return (
-                        <TextField
-                          InputLabelProps={{ shrink: true }}
-                          label={"Cidade"}
-                          error={errors.city ? true : false}
-                          placeholder="Selecione a cidade"
-                          {...params}
-                          {...register("city")}
-                        />
-                      );
-                    }}
+                  <Controller
+                    name="city"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field: { onChange, value } }) => (
+                      <Autocomplete
+                        freeSolo
+                        onChange={(event, item) => {
+                          onChange(item);
+                        }}
+                        options={[
+                          { id: 1, name: "Franca" },
+                          { id: 2, name: "Ribeirão Preto" },
+                        ]}
+                        value={value}
+                        getOptionLabel={(option: any) => option.name}
+                        isOptionEqualToValue={(optionItem, value) => {
+                          return optionItem.id === value.id;
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Cidade"
+                            variant="outlined"
+                            error={!!errors.city ? true : false}
+                            helperText={errors.city && "Selecione sua cidade"}
+                            onChange={onChange}
+                          />
+                        )}
+                      />
+                    )}
                   />
-
-                  {/* <TextField
-                    InputLabelProps={{ shrink: true }}
-                    error={errors.city ? true : false}
-                    fullWidth
-                    variant="outlined"
-                    label="Cidade"
-                    placeholder="Selecione a cidade"
-                    {...register("city")}
-                  /> */}
                   {errors.city && <SpanError errorText={errors.city.message} />}
                 </Grid>
                 <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
