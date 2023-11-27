@@ -24,12 +24,24 @@ export default function SecurityGroup() {
   const [loading, setLoading] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alerMessage, setAlerMessage] = useState<string>("");
+  const [cityOptions, setCityOptions] = useState<
+    { id: number; name: string }[]
+  >([
+    { id: 1, name: "Franca" },
+    { id: 2, name: "Ribeirão Preto" },
+  ]);
+  const [estateOptions, setEstateOptions] = useState<
+    { id: number; name: string }[]
+  >([
+    { id: 1, name: "São Paulo" },
+    { id: 2, name: "Minas Gerais" },
+  ]);
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
+    // setValue,
     formState: { errors },
     control,
   } = useForm<userProfileForm>({
@@ -50,8 +62,9 @@ export default function SecurityGroup() {
         cel: phoneMask("16998761113"),
         email: "asdad@email.com",
         city: { id: 1, name: "Franca" },
+        state: { id: 1, name: "São Paulo" },
       });
-    }, 5000);
+    }, 3000);
   }, []);
 
   return (
@@ -278,18 +291,21 @@ export default function SecurityGroup() {
                     name="city"
                     control={control}
                     rules={{ required: true }}
-                    render={({ field: { onChange, value } }) => (
+                    render={({ field: { onChange, value, onBlur } }) => (
                       <Autocomplete
-                        freeSolo
-                        onChange={(event, item) => {
-                          onChange(item);
+                        options={cityOptions || []}
+                        getOptionLabel={(option: any) =>
+                          option.name ? option.name : null
+                        }
+                        value={value ?? null}
+                        inputValue={value ? value.name : undefined}
+                        onChange={(event, values, reason) => {
+                          if (reason === "clear") {
+                            onChange(null);
+                            return;
+                          }
+                          onChange(values || null);
                         }}
-                        options={[
-                          { id: 1, name: "Franca" },
-                          { id: 2, name: "Ribeirão Preto" },
-                        ]}
-                        value={value}
-                        getOptionLabel={(option: any) => option.name}
                         isOptionEqualToValue={(optionItem, value) => {
                           return optionItem.id === value.id;
                         }}
@@ -298,9 +314,13 @@ export default function SecurityGroup() {
                             {...params}
                             label="Cidade"
                             variant="outlined"
+                            value={value}
                             error={!!errors.city ? true : false}
                             helperText={errors.city && "Selecione sua cidade"}
-                            onChange={onChange}
+                            onChange={(event) => {
+                              onChange(event.target.value);
+                            }}
+                            InputLabelProps={{ shrink: true }}
                           />
                         )}
                       />
@@ -309,15 +329,46 @@ export default function SecurityGroup() {
                   {errors.city && <SpanError errorText={errors.city.message} />}
                 </Grid>
                 <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                  <TextField
-                    InputLabelProps={{ shrink: true }}
-                    error={errors.state ? true : false}
-                    fullWidth
-                    variant="outlined"
-                    label="Estado"
-                    placeholder="Selecione o estado"
-                    {...register("state")}
+                  <Controller
+                    name="state"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field: { onChange, value } }) => (
+                      <Autocomplete
+                        options={estateOptions || []}
+                        getOptionLabel={(option: any) =>
+                          option.name ? option.name : null
+                        }
+                        value={value ?? null}
+                        inputValue={value ? value.name : undefined}
+                        onChange={(event, values, reason) => {
+                          if (reason === "clear") {
+                            onChange(null);
+                            return;
+                          }
+                          onChange(values || null);
+                        }}
+                        isOptionEqualToValue={(optionItem, valueEqual) => {
+                          return optionItem.id === valueEqual.id;
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Estado"
+                            variant="outlined"
+                            value={value}
+                            error={!!errors.state ? true : false}
+                            helperText={errors.state && "Selecione sua estado"}
+                            onChange={(event) => {
+                              onChange(event.target.value);
+                            }}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        )}
+                      />
+                    )}
                   />
+
                   {errors.state && (
                     <SpanError errorText={errors.state.message} />
                   )}

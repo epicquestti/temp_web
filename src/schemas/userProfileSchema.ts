@@ -24,7 +24,10 @@ export const userProfileSchema = z.object({
     id: z.number(),
     name: z.string(),
   }),
-  state: z.string(),
+  state: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
   obs: z.string(),
 });
 
