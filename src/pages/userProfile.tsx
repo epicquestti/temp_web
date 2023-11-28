@@ -116,7 +116,7 @@ export default function SecurityGroup() {
                       borderRadius: 2,
                     }}
                   >
-                    <Avatar sx={{ width: 200, height: 200 }} />
+                    <Avatar sx={{ width: "80%", minHeight: 200 }} />
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
