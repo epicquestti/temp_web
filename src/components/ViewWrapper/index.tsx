@@ -149,6 +149,17 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
                 </ListItemIcon>
                 <ListItemText primary="Regras personalizadas" />
               </ListItemButton>
+
+              <ListItemButton
+                onClick={() => {
+                  router.push("/customer");
+                }}
+              >
+                <ListItemIcon>
+                  <Icon>person_pin_circle</Icon>
+                </ListItemIcon>
+                <ListItemText primary="Clientes" />
+              </ListItemButton>
             </List>
           )}
         </Toolbar>

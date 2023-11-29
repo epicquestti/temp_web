@@ -118,25 +118,15 @@ export default function ClientRules() {
                         Todos os condomínios / todos as mensalidades
                       </MenuItem>
                       <MenuItem value={2}>
-                        Todos os condomínios / 1ª mensalidade
+                        Nº de condomínios personalizaveis / todos as
+                        mensalidades
                       </MenuItem>
                       <MenuItem value={3}>
-                        Todos os condomínios / 1ª e 2ª mensalidades
-                      </MenuItem>
-                      <MenuItem value={4}>
-                        1º condomínio / 1ª mensalidade
-                      </MenuItem>
-                      <MenuItem value={5}>
-                        1º condomínio / 1ª e 2ª mensalidades
-                      </MenuItem>
-                      <MenuItem value={6}>
-                        1º e 2º condomínios / 1ª mensalidade
-                      </MenuItem>
-                      <MenuItem value={7}>
-                        1º e 2º condomínios / 1ª e 2ª mensalidades
+                        Todos os condomínios / Nº de mensalidades
+                        personalizaveis
                       </MenuItem>
                       <MenuItem value={8}>
-                        Nº de condomínios / Nº de mensalidades personalizaveis.
+                        Nº de condomínios e Nº de mensalidades personalizaveis.
                       </MenuItem>
                     </Select>
                   </FormControl>
@@ -273,25 +263,15 @@ export default function ClientRules() {
                         Todos os condomínios / todos as mensalidades
                       </MenuItem>
                       <MenuItem value={2}>
-                        Todos os condomínios / 1ª mensalidade
+                        Nº de condomínios personalizaveis / todos as
+                        mensalidades
                       </MenuItem>
                       <MenuItem value={3}>
-                        Todos os condomínios / 1ª e 2ª mensalidades
-                      </MenuItem>
-                      <MenuItem value={4}>
-                        1º condomínio / 1ª mensalidade
-                      </MenuItem>
-                      <MenuItem value={5}>
-                        1º condomínio / 1ª e 2ª mensalidades
-                      </MenuItem>
-                      <MenuItem value={6}>
-                        1º e 2º condomínios / 1ª mensalidade
-                      </MenuItem>
-                      <MenuItem value={7}>
-                        1º e 2º condomínios / 1ª e 2ª mensalidades
+                        Todos os condomínios / Nº de mensalidades
+                        personalizaveis
                       </MenuItem>
                       <MenuItem value={8}>
-                        Nº de condomínios / Nº de mensalidades personalizaveis.
+                        Nº de condomínios e Nº de mensalidades personalizaveis.
                       </MenuItem>
                     </Select>
                   </FormControl>
