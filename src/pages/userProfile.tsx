@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import SpanError from "@/components/SpanError";
 import ViewWrapper from "@/components/ViewWrapper";
 import { cepMask, phoneMask } from "@/lib/masks";
@@ -41,7 +42,6 @@ export default function SecurityGroup() {
     register,
     handleSubmit,
     reset,
-    // setValue,
     formState: { errors },
     control,
   } = useForm<userProfileForm>({

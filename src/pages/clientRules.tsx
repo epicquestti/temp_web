@@ -18,6 +18,7 @@ import {
   Paper,
   Select,
   TextField,
+  Typography,
 } from "@mui/material";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -83,6 +84,14 @@ export default function ClientRules() {
                 justifyContent="center"
                 alignItems="center"
               >
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <Typography
+                    variant="h6"
+                    sx={{ color: (theme) => theme.palette.secondary.light }}
+                  >
+                    Busque regras existentes
+                  </Typography>
+                </Grid>
                 <Grid item xs={12} sm={12} md={8} lg={8} xl={8}>
                   <TextField
                     InputLabelProps={{ shrink: true }}
@@ -229,6 +238,14 @@ export default function ClientRules() {
           <Paper sx={{ p: 3 }}>
             <form>
               <Grid container spacing={2}>
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <Typography
+                    variant="h6"
+                    sx={{ color: (theme) => theme.palette.secondary.light }}
+                  >
+                    Crie regras eu edite regras existentes
+                  </Typography>
+                </Grid>
                 <Grid item xs={12} sm={12} md={8} lg={8} xl={8}>
                   <TextField
                     InputLabelProps={{ shrink: true }}

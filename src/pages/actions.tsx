@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import QHGrid from "@/components/DataGridV2";
 import ViewWrapper from "@/components/ViewWrapper";
 import { useApplicationContext } from "@/context/ApplicationContext";
@@ -16,6 +17,7 @@ import {
   Grid,
   Paper,
   TextField,
+  Typography,
 } from "@mui/material";
 import { ChangeEvent, KeyboardEvent, useEffect, useState } from "react";
 
@@ -292,93 +294,17 @@ export default function Actions() {
       <Grid container spacing={2}>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} sm={12} md={5} lg={5} xl={5}>
-                <TextField
-                  variant="standard"
-                  label="ação"
-                  fullWidth
-                  value={actionName}
-                  placeholder="insira o nome da ação"
-                  onChange={(e) => {
-                    setActionName(e.target.value);
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                >
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={actionActive}
-                        onChange={(
-                          event: ChangeEvent<HTMLInputElement>,
-                          checked: boolean
-                        ) => {
-                          setActionActive(checked);
-                        }}
-                      />
-                    }
-                    label="Ativo"
-                  />
-                </Box>
-              </Grid>
-              {actionId ? (
-                <>
-                  <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      fullWidth
-                      endIcon={<Close />}
-                      onClick={() => {
-                        setActionId(undefined);
-                        setActionName("");
-                        setActionActive(false);
-                      }}
-                    >
-                      Cancelar
-                    </Button>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      endIcon={<Edit />}
-                      onClick={() => {
-                        updateAction();
-                      }}
-                    >
-                      Editar
-                    </Button>
-                  </Grid>
-                </>
-              ) : (
-                <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    endIcon={<Send />}
-                    onClick={saveAction}
-                  >
-                    Salvar
-                  </Button>
-                </Grid>
-              )}
-            </Grid>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Paper sx={{ p: 3 }}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                 <Grid container spacing={2}>
+                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                    <Typography
+                      variant="h6"
+                      sx={{ color: (theme) => theme.palette.secondary.light }}
+                    >
+                      Busque ações existentes
+                    </Typography>
+                  </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={6} xl={6}>
                     <TextField
                       variant="standard"
@@ -502,6 +428,98 @@ export default function Actions() {
                   ]}
                 />
               </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+          <Paper sx={{ p: 3 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                <Typography
+                  variant="h6"
+                  sx={{ color: (theme) => theme.palette.secondary.light }}
+                >
+                  Crie novas ações ou edite ações existentes
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={12} md={5} lg={5} xl={5}>
+                <TextField
+                  variant="standard"
+                  label="ação"
+                  fullWidth
+                  value={actionName}
+                  placeholder="insira o nome da ação"
+                  onChange={(e) => {
+                    setActionName(e.target.value);
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={actionActive}
+                        onChange={(
+                          event: ChangeEvent<HTMLInputElement>,
+                          checked: boolean
+                        ) => {
+                          setActionActive(checked);
+                        }}
+                      />
+                    }
+                    label="Ativo"
+                  />
+                </Box>
+              </Grid>
+              {actionId ? (
+                <>
+                  <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      fullWidth
+                      endIcon={<Close />}
+                      onClick={() => {
+                        setActionId(undefined);
+                        setActionName("");
+                        setActionActive(false);
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </Grid>
+                  <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      endIcon={<Edit />}
+                      onClick={() => {
+                        updateAction();
+                      }}
+                    >
+                      Editar
+                    </Button>
+                  </Grid>
+                </>
+              ) : (
+                <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    endIcon={<Send />}
+                    onClick={saveAction}
+                  >
+                    Salvar
+                  </Button>
+                </Grid>
+              )}
             </Grid>
           </Paper>
         </Grid>

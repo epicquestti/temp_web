@@ -1,5 +1,6 @@
+import QHGrid from "@/components/DataGridV2";
 import ViewWrapper from "@/components/ViewWrapper";
-import { Search } from "@mui/icons-material";
+import { Delete, Edit, Search } from "@mui/icons-material";
 import {
   Box,
   FormControl,
@@ -12,6 +13,7 @@ import {
   Tab,
   Tabs,
   TextField,
+  Typography,
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -91,7 +93,17 @@ export default function Management() {
             {/* ### 1. Dados do cliente */}
             <CustomTabPanel value={tabControl} index={0}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      color: (theme) => theme.palette.secondary.light,
+                    }}
+                  >
+                    Info. do cliente
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
                   <TextField
                     InputLabelProps={{ shrink: true }}
                     // error={errors.name ? true : false}
@@ -115,30 +127,51 @@ export default function Management() {
                     // ToDo Add Arrors
                   />
                 </Grid>
-                <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
-                  <FormControl>
-                    <FormLabel id="dclient-type-group-label">
-                      Tipo de cliente
-                    </FormLabel>
-                    <RadioGroup
-                      row
-                      aria-labelledby="dclient-type-group-label"
-                      defaultValue="J"
-                    >
-                      <FormControlLabel
-                        value="J"
-                        control={<Radio />}
-                        label="Jurídica"
-                      />
-                      <FormControlLabel
-                        value="F"
-                        control={<Radio />}
-                        label="Física"
-                      />
-                    </RadioGroup>
-                  </FormControl>
+                <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <FormControlLabel control={<Radio />} label="Ativo" />
+                  </Box>
                 </Grid>
-                <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <FormControl>
+                      <FormLabel id="dclient-type-group-label">
+                        Tipo de cliente
+                      </FormLabel>
+                      <RadioGroup
+                        row
+                        aria-labelledby="dclient-type-group-label"
+                        defaultValue="J"
+                      >
+                        <FormControlLabel
+                          value="J"
+                          control={<Radio />}
+                          label="Jurídica"
+                        />
+                        <FormControlLabel
+                          value="F"
+                          control={<Radio />}
+                          label="Física"
+                        />
+                      </RadioGroup>
+                    </FormControl>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
                   <TextField
                     InputLabelProps={{ shrink: true }}
                     // error={errors.name ? true : false}
@@ -150,17 +183,175 @@ export default function Management() {
                     // ToDo Add Arrors
                   />
                 </Grid>
-                <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
+                <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DatePicker label="Data de nascimento" />
+                    <DatePicker
+                      label="Data de nascimento"
+                      sx={{ width: "100%" }}
+                    />
                   </LocalizationProvider>
+                </Grid>
+                <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="RG"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Celular"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Telefone"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Email principal"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Email financeiro"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      color: (theme) => theme.palette.secondary.light,
+                    }}
+                  >
+                    Endereço do cliente
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Cep"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Rua"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Bairro"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Número"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={5} lg={5} xl={5}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Cidade"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={5} lg={5} xl={5}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Estado"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <TextField
+                    InputLabelProps={{ shrink: true }}
+                    // error={errors.name ? true : false}
+                    fullWidth
+                    variant="outlined"
+                    label="Complemento"
+                    placeholder="Entre com seu nome completo"
+                    // {...register("name")}
+                    // ToDo Add Arrors
+                  />
                 </Grid>
               </Grid>
             </CustomTabPanel>
             {/* ### 2. Personalização */}
             <CustomTabPanel value={tabControl} index={1}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                   <TextField
                     InputLabelProps={{ shrink: true }}
                     variant="standard"
@@ -175,6 +366,75 @@ export default function Management() {
                     InputProps={{
                       startAdornment: <Search />,
                     }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <QHGrid
+                    // data={functionList}
+                    // loading={gridLoading}
+                    // pagination={{
+                    //   count: gridCount,
+                    //   page: page,
+                    //   rowsPerPage: rowsPerPage,
+                    //   rowsPerPageOptions: [5, 10, 20, 40, 50, 100],
+                    //   onRowsPerPageChange(rowsPerPAge) {},
+                    //   onPageChange(page) {},
+                    // }}
+                    hasActions
+                    actionTrigger={(id: number, functionName: string) => {
+                      switch (functionName) {
+                        case "edit":
+                          break;
+                        case "delete":
+                          break;
+                        default:
+                          break;
+                      }
+                    }}
+                    actions={[
+                      {
+                        icon: <Edit />,
+                        name: "edit",
+                        text: "Editar",
+                      },
+                      {
+                        icon: <Delete />,
+                        name: "delete",
+                        text: "Excluir",
+                      },
+                    ]}
+                    headers={[
+                      {
+                        text: "Função",
+                        attrName: "name",
+                        align: "center",
+                      },
+                      {
+                        text: "Identificação",
+                        attrName: "name",
+                        align: "center",
+                      },
+                      {
+                        text: "Ativo",
+                        attrName: "active",
+                        align: "center",
+                        width: 2,
+                        custom: {
+                          isIcon: true,
+                          icon: "add_alert",
+                        },
+                      },
+                      {
+                        text: "Visível",
+                        attrName: "active",
+                        align: "center",
+                        width: 2,
+                        custom: {
+                          isIcon: true,
+                          icon: "add_alert",
+                        },
+                      },
+                    ]}
                   />
                 </Grid>
               </Grid>

@@ -63,6 +63,20 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
                 setrtOpen(!rtOpen);
               }}
             >
+              <Icon>notifications</Icon>
+              <Icon>notifications_active</Icon>
+              <Icon>notifications_paused</Icon>
+            </IconButton>
+          </Box>
+
+          <Box sx={{ display: "inline-flex", alignItems: "center" }}>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={() => {
+                setrtOpen(!rtOpen);
+              }}
+            >
               <AccountCircle />
             </IconButton>
           </Box>
@@ -159,6 +173,17 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
                   <Icon>person_pin_circle</Icon>
                 </ListItemIcon>
                 <ListItemText primary="Clientes" />
+              </ListItemButton>
+
+              <ListItemButton
+                onClick={() => {
+                  router.push("/plans");
+                }}
+              >
+                <ListItemIcon>
+                  <Icon>assignment</Icon>
+                </ListItemIcon>
+                <ListItemText primary="Planos" />
               </ListItemButton>
             </List>
           )}
