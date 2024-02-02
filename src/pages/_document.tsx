@@ -23,11 +23,11 @@ export default function MyDocument({ emotionStyleTags }: MyDocumentProps) {
       <Head>
         <meta name="theme-color" content={theme.palette.primary.main} />
         <meta charSet="utf-8" />
-        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="shortcut icon" href="/favicon.png" />
         <meta name="referrer" content="always" />
-        <meta name="description" content="condoApp" />
-        <meta name="application-name" content="condoApp" />
-        <meta name="keywords" content="condoApp" />
+        <meta name="description" content="Condowave" />
+        <meta name="application-name" content="Condowave" />
+        <meta name="keywords" content="Condowave" />
         <meta name="emotion-insertion-point" content="" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link

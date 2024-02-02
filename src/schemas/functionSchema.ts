@@ -18,17 +18,25 @@ export const functionSchema = z.object({
     .string()
     .min(3, "url da função deve ter ao menos 3 caracteres")
     .max(300, "url da função deve conter ao máximo 100 caracteres"),
-  deviceComponent: z.object({
-    id: z.number(),
-    name: z.string(),
-  }),
+  deviceComponent: z.number(),
   visible: z.boolean(),
   functionActions: z.array(
     z.object({
       id: z.number(),
+      checked: z.boolean(),
       name: z.string(),
     })
   ),
 });
 
 export type functionForm = z.infer<typeof functionSchema>;
+
+export const searchFunctionSchema = z.object({
+  criteria: z
+    .string()
+    .max(100, "critério de busca não deve ter mais que 100 caracteres."),
+  active: z.boolean(),
+  visible: z.boolean(),
+});
+
+export type searchFunctionForm = z.infer<typeof searchFunctionSchema>;

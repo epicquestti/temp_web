@@ -27,6 +27,7 @@ import {
 } from "@mui/material";
 import axios, { AxiosResponse } from "axios";
 import { NextPage } from "next";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import { KeyboardEvent, useState } from "react";
 
@@ -385,7 +386,12 @@ const Authentication: NextPage<{ api: string }> = (props) => {
                   textAlign="center"
                 >
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Typography>LOGO</Typography>
+                    <Image
+                      alt="condowave logo"
+                      src="/logo-200x95.png"
+                      width={200}
+                      height={95}
+                    />
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <Typography>condoApp</Typography>
