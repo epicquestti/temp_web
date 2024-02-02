@@ -30,6 +30,7 @@ export default function SecurityGroup() {
   const [alerMessage, setAlerMessage] = useState<string>("");
   const [gridLoading, setGridLoading] = useState<boolean>(false);
   const [gridCount, setGridCount] = useState<number>(0);
+  const [functionCount, setFunctionCount] = useState<number>(0);
   const [page, setPage] = useState<number>(0);
   const [rowsPerPage, setRowsPerPage] = useState<number>(5);
   const [groupList, setGroupList] = useState<
@@ -55,8 +56,17 @@ export default function SecurityGroup() {
   const [groupFunctions, setGroupFunctions] = useState<any[]>([]);
 
   const [searchName, setSearchName] = useState<string | null>("");
+  const [searchIdentification, setSearchIdentification] = useState<
+    string | null
+  >("");
+  const [searchColor, setSearchColor] = useState<string | null>("");
   const [searchActive, setSearchActive] = useState<boolean>(false);
   const [searchSuper, setSearchSuper] = useState<boolean>(false);
+
+  const [functionSearchName, setFunctionSearchName] = useState<string | null>(
+    ""
+  );
+  const [autocompleteOptions, setAutocompleteOptions] = useState<any[]>([]);
 
   const context = useApplicationContext();
 
@@ -74,9 +84,9 @@ export default function SecurityGroup() {
         "/groups",
         {
           name: searchName,
-          codeName: groupIdentification,
-          color: groupColor,
-          active: groupActive,
+          codeName: searchIdentification,
+          color: searchColor,
+          active: searchActive,
           super: searchSuper,
           page: pageParam !== null ? pageParam : page,
           take: rowPerPageParam !== null ? rowPerPageParam : rowsPerPage,
@@ -89,19 +99,81 @@ export default function SecurityGroup() {
         }
       );
 
-      if (listResponse.success) {
-        console.log(listResponse.data.list[0].groupFunctions);
+      console.log("listResponse", listResponse);
 
+      if (listResponse.success) {
         setGroupList(listResponse.data.list);
         setGridCount(listResponse.data.count);
-        const newArrayValue = [
-          ...groupFunctions,
-          listResponse.data.list[0].groupFunctions,
-        ];
-        setGroupFunctions(newArrayValue);
       } else throw new Error(listResponse.message);
 
       setGridLoading(false);
+    } catch (error: any) {
+      setGridLoading(false);
+      setLoading(false);
+      setAlerMessage(error.message);
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 6000);
+    }
+  };
+
+  const catchThisGroupToEdit = async (id: number) => {
+    try {
+      setLoading(true);
+
+      const groupById = await fetchApi.get(`/groups/${id}`, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      });
+      console.log("groupById", groupById);
+
+      if (groupById.success) {
+        setGroupId(groupById.data.group.id);
+        setGroupName(groupById.data.group.name);
+        setGroupIdentification(groupById.data.group.codeName);
+        setGroupColor(groupById.data.group.color);
+        setGroupActive(groupById.data.group.active);
+        setGroupSuper(groupById.data.group.super);
+        setGroupFunctions(groupById.data.groupFunctions);
+        setFunctionCount(groupById.data.count);
+      } else throw new Error(groupById.message);
+
+      setLoading(false);
+    } catch (error: any) {
+      setGridLoading(false);
+      setLoading(false);
+      setAlerMessage(error.message);
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 6000);
+    }
+  };
+
+  const catchThisGroupToDelete = async (id: number) => {
+    try {
+      setLoading(true);
+
+      const groupById = await fetchApi.get(`/groups/${id}`, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      });
+      setShowDeleteQuestion(true);
+      setGroupName(groupById.data.group.name);
+      setGroupId(groupById.data.group.id);
+
+      // if (groupById.success) {
+      //   setGroupIdentification(groupById.data.group.codeName);
+      //   setGroupColor(groupById.data.group.color);
+      //   setGroupActive(groupById.data.group.active);
+      // } else throw new Error(groupById.message);
+
+      setLoading(false);
     } catch (error: any) {
       setGridLoading(false);
       setLoading(false);
@@ -121,6 +193,10 @@ export default function SecurityGroup() {
 
       setLoading(true);
 
+      const parsedFunctionsArray = groupFunctions.map((e) => {
+        return Number(e.id);
+      });
+
       const actionCreated = await fetchApi.post(
         `/groups/new`,
         {
@@ -130,7 +206,7 @@ export default function SecurityGroup() {
           active: groupActive,
           super: groupSuper,
           createdById: 1,
-          functions: [],
+          functions: parsedFunctionsArray,
         },
         {
           headers: {
@@ -159,48 +235,17 @@ export default function SecurityGroup() {
     }
   };
 
-  const catchThisGroupToEdit = async (id: number) => {
-    try {
-      setLoading(true);
-
-      const groupById = await fetchApi.get(`/groups/${id}`, {
-        headers: {
-          "router-id": "WEB#API",
-          Authorization: context.getToken(),
-        },
-      });
-
-      console.log("groupById", groupById.data);
-
-      if (groupById.success) {
-        setGroupId(groupById.data.id);
-        setGroupName(groupById.data.name);
-        setGroupIdentification(groupById.data.codeName);
-        setGroupColor(groupById.data.color);
-        setGroupActive(groupById.data.active);
-        setGroupFunctions(groupById.data.functions);
-        setGroupSuper(groupById.data.super);
-      } else throw new Error(groupById.message);
-
-      setLoading(false);
-    } catch (error: any) {
-      setGridLoading(false);
-      setLoading(false);
-      setAlerMessage(error.message);
-      setShowAlert(true);
-      setTimeout(() => {
-        setShowAlert(false);
-      }, 6000);
-    }
-  };
-
   const updateGroup = async () => {
     try {
       if (!groupName) throw new Error("Insira o nome do grupo.");
       setLoading(true);
 
-      const groupById = await fetchApi.put(
-        `/actions/${groupId}/update`,
+      const functionsIds = groupFunctions.map((e) => {
+        return Number(e.id);
+      });
+
+      const updateResponse = await fetchApi.put(
+        `/groups/${groupId}/update`,
         {
           id: groupId,
           name: groupName,
@@ -208,6 +253,7 @@ export default function SecurityGroup() {
           color: groupColor,
           active: groupActive,
           super: groupSuper,
+          functions: functionsIds,
         },
         {
           headers: {
@@ -217,46 +263,14 @@ export default function SecurityGroup() {
         }
       );
 
-      if (groupById.success) {
+      if (updateResponse.success) {
         setGroupId(null);
         setGroupName("");
         setGroupActive(false);
 
         searchGroups(null, null);
         setLoading(false);
-      } else throw new Error(groupById.message);
-    } catch (error: any) {
-      setGridLoading(false);
-      setLoading(false);
-      setAlerMessage(error.message);
-      setShowAlert(true);
-      setTimeout(() => {
-        setShowAlert(false);
-      }, 6000);
-    }
-  };
-
-  const catchThisGroupToDelete = async (id: number) => {
-    try {
-      setLoading(true);
-
-      const groupById = await fetchApi.get(`/groups/${id}`, {
-        headers: {
-          "router-id": "WEB#API",
-          Authorization: context.getToken(),
-        },
-      });
-
-      if (groupById.success) {
-        setGroupId(groupById.data.id);
-        setGroupName(groupById.data.name);
-        setGroupIdentification(groupById.data.codeName);
-        setGroupColor(groupById.data.color);
-        setGroupActive(groupById.data.active);
-        setShowDeleteQuestion(true);
-      } else throw new Error(groupById.message);
-
-      setLoading(false);
+      } else throw new Error(updateResponse.message);
     } catch (error: any) {
       setGridLoading(false);
       setLoading(false);
@@ -272,23 +286,26 @@ export default function SecurityGroup() {
     try {
       setLoading(true);
 
-      const groupById = await fetchApi.del(`/groups/${groupId}/delete`, {
+      const deleteResponse = await fetchApi.del(`/groups/${groupId}/delete`, {
         headers: {
           "router-id": "WEB#API",
           Authorization: context.getToken(),
         },
       });
 
-      if (groupById.success) {
+      if (deleteResponse.success) {
         setGroupId(null);
-        setGroupName(null);
+        setGroupName("");
         setGroupActive(false);
+        setGroupColor("");
+        setGroupIdentification("");
+        setGroupFunctions([]);
 
         searchGroups(null, null);
 
         setLoading(false);
         setShowDeleteQuestion(false);
-      } else throw new Error(groupById.message);
+      } else throw new Error(deleteResponse.message);
     } catch (error: any) {
       setGridLoading(false);
       setLoading(false);
@@ -297,6 +314,16 @@ export default function SecurityGroup() {
       setTimeout(() => {
         setShowAlert(false);
       }, 6000);
+    }
+  };
+
+  const searchFunctions = async (functionName: string) => {
+    const apiResponse = await fetchApi.post(`/functions/get-by-name`, {
+      name: functionName,
+    });
+
+    if (apiResponse.success && apiResponse.data.length > 0) {
+      setAutocompleteOptions(apiResponse.data);
     }
   };
 
@@ -338,6 +365,7 @@ export default function SecurityGroup() {
                 <TextField
                   variant="standard"
                   label="Nome do grupo"
+                  InputLabelProps={{ shrink: true }}
                   value={searchName}
                   fullWidth
                   onKeyDown={searchGroupsByKeyPress}
@@ -352,12 +380,13 @@ export default function SecurityGroup() {
                 <TextField
                   variant="standard"
                   label="Identificação"
+                  InputLabelProps={{ shrink: true }}
                   fullWidth
-                  value={groupIdentification}
+                  value={searchIdentification}
                   onKeyDown={searchGroupsByKeyPress}
                   placeholder="insira a identificação"
                   onChange={(e) => {
-                    setGroupIdentification(e.target.value);
+                    setSearchIdentification(e.target.value);
                   }}
                 />
               </Grid>
@@ -366,12 +395,13 @@ export default function SecurityGroup() {
                 <TextField
                   variant="standard"
                   label="Cor"
+                  InputLabelProps={{ shrink: true }}
                   fullWidth
-                  value={groupColor}
+                  value={searchColor}
                   onKeyDown={searchGroupsByKeyPress}
                   placeholder="insira o código hexadecimal da cor"
                   onChange={(e) => {
-                    setGroupColor(e.target.value);
+                    setSearchColor(e.target.value);
                   }}
                 />
               </Grid>
@@ -392,7 +422,7 @@ export default function SecurityGroup() {
                           event: ChangeEvent<HTMLInputElement>,
                           checked: boolean
                         ) => {
-                          setSearchActive(checked);
+                          setSearchActive(event.target.checked);
                         }}
                       />
                     }
@@ -417,7 +447,7 @@ export default function SecurityGroup() {
                           event: ChangeEvent<HTMLInputElement>,
                           checked: boolean
                         ) => {
-                          setSearchSuper(checked);
+                          setSearchSuper(event.target.checked);
                         }}
                       />
                     }
@@ -425,7 +455,6 @@ export default function SecurityGroup() {
                   />
                 </Box>
               </Grid>
-              {JSON.stringify(groupFunctions)}
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                 <Button
                   variant="outlined"
@@ -439,6 +468,7 @@ export default function SecurityGroup() {
                 </Button>
               </Grid>
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                {JSON.stringify(groupList)}
                 <QHGrid
                   data={groupList}
                   loading={gridLoading}
@@ -506,7 +536,7 @@ export default function SecurityGroup() {
                       width: 2,
                       custom: {
                         isBox: true,
-                        color: "#FFB300",
+                        color: "color",
                       },
                     },
                     {
@@ -526,6 +556,7 @@ export default function SecurityGroup() {
                       custom: {
                         isIcon: true,
                         icon: "add_alert",
+                        color: "iconColor",
                       },
                     },
                   ]}
@@ -550,6 +581,7 @@ export default function SecurityGroup() {
                 <TextField
                   variant="standard"
                   label="Nome do grupo"
+                  InputLabelProps={{ shrink: true }}
                   value={groupName}
                   fullWidth
                   onKeyDown={searchGroupsByKeyPress}
@@ -565,6 +597,7 @@ export default function SecurityGroup() {
                   variant="standard"
                   label="Identificação"
                   value={groupIdentification}
+                  InputLabelProps={{ shrink: true }}
                   fullWidth
                   onKeyDown={searchGroupsByKeyPress}
                   placeholder="Insira a identificação"
@@ -579,6 +612,7 @@ export default function SecurityGroup() {
                   variant="standard"
                   label="Cor"
                   value={groupColor}
+                  InputLabelProps={{ shrink: true }}
                   fullWidth
                   onKeyDown={searchGroupsByKeyPress}
                   placeholder="Insira o código hexadecimal da cor"
@@ -604,7 +638,7 @@ export default function SecurityGroup() {
                           event: ChangeEvent<HTMLInputElement>,
                           checked: boolean
                         ) => {
-                          setGroupActive(checked);
+                          setGroupActive(event.target.checked);
                         }}
                       />
                     }
@@ -629,7 +663,7 @@ export default function SecurityGroup() {
                           event: ChangeEvent<HTMLInputElement>,
                           checked: boolean
                         ) => {
-                          setGroupSuper(checked);
+                          setGroupSuper(event.target.checked);
                         }}
                       />
                     }
@@ -640,19 +674,38 @@ export default function SecurityGroup() {
 
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                 <Autocomplete
-                  options={[]}
+                  options={autocompleteOptions}
+                  getOptionLabel={(option) => option.name}
+                  onChange={(event, newValue) => {
+                    if (newValue) {
+                      setGroupFunctions((prev) => [...(prev || []), newValue]);
+                    }
+
+                    // let temp = [...groupFunctions];
+                    // temp = [...groupFunctions, newValue];
+                    // setGroupFunctions(temp);
+                  }}
                   renderInput={(params: AutocompleteRenderInputParams) => (
-                    <TextField label={"Digite o nome da Função"} {...params} />
+                    <TextField
+                      label={"Digite o nome da Função"}
+                      {...params}
+                      value={functionSearchName}
+                      InputLabelProps={{ shrink: true }}
+                      onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                        setFunctionSearchName(event.target.value);
+                        searchFunctions(event.target.value);
+                      }}
+                    />
                   )}
                 />
               </Grid>
 
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                 <QHGrid
-                  data={groupList}
+                  data={groupFunctions}
                   loading={gridLoading}
                   pagination={{
-                    count: gridCount,
+                    count: functionCount,
                     page: page,
                     rowsPerPage: rowsPerPage,
                     rowsPerPageOptions: [5, 10, 20, 40, 50, 100],
@@ -666,7 +719,17 @@ export default function SecurityGroup() {
                     },
                   }}
                   hasActions
-                  actionTrigger={(id: number, functionName: string) => {}}
+                  actionTrigger={(id: number, functionName: string) => {
+                    switch (functionName) {
+                      case "edit":
+                        break;
+                      case "delete":
+                        const updatedState = groupFunctions.filter(
+                          (item) => item.id !== id
+                        );
+                        setGroupFunctions(updatedState);
+                    }
+                  }}
                   actions={[
                     {
                       icon: <Home />,
@@ -682,12 +745,18 @@ export default function SecurityGroup() {
                   headers={[
                     {
                       text: "Função",
-                      // attrName: "groupFunctions",
+                      attrName: "name",
                       width: 10,
                     },
                     {
                       text: "Livre para o grupo ? ",
+                      attrName: "freeForGroup",
                       width: 2,
+                      align: "center",
+                      custom: {
+                        isIcon: true,
+                        icon: "add_alert",
+                      },
                     },
                   ]}
                 />

@@ -137,7 +137,7 @@ export const TableNode = (
             <Tooltip
               title={listNode[
                 headers[i].attrName as keyof typeof listNode
-              ].toString()}
+              ]?.toString()}
             >
               <Icon sx={{ color: listNode.color }}>{listNode.icon}</Icon>
             </Tooltip>
