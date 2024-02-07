@@ -2,7 +2,15 @@ import QHGrid from "@/components/DataGridV2";
 import ViewWrapper from "@/components/ViewWrapper";
 import { useApplicationContext } from "@/context/ApplicationContext";
 import fetchApi from "@/lib/fetchApi";
-import { Close, Delete, Edit, Home, Search, Send } from "@mui/icons-material";
+import {
+  Close,
+  Delete,
+  Edit,
+  Home,
+  PublishedWithChanges,
+  Search,
+  Send,
+} from "@mui/icons-material";
 import {
   Autocomplete,
   AutocompleteRenderInputParams,
@@ -241,7 +249,10 @@ export default function SecurityGroup() {
       setLoading(true);
 
       const functionsIds = groupFunctions.map((e) => {
-        return Number(e.id);
+        return {
+          id: Number(e.id),
+          freeForGroup: e.freeForGroup,
+        };
       });
 
       const updateResponse = await fetchApi.put(
@@ -677,13 +688,20 @@ export default function SecurityGroup() {
                   options={autocompleteOptions}
                   getOptionLabel={(option) => option.name}
                   onChange={(event, newValue) => {
-                    if (newValue) {
-                      setGroupFunctions((prev) => [...(prev || []), newValue]);
-                    }
+                    console.log("newValue", newValue);
 
-                    // let temp = [...groupFunctions];
-                    // temp = [...groupFunctions, newValue];
-                    // setGroupFunctions(temp);
+                    if (newValue) {
+                      setGroupFunctions((prev) => [
+                        ...(prev || []),
+                        {
+                          id: newValue.id,
+                          name: newValue.name,
+                          icon: "clear",
+                          color: "red",
+                          freeForGroup: false,
+                        },
+                      ]);
+                    }
                   }}
                   renderInput={(params: AutocompleteRenderInputParams) => (
                     <TextField
@@ -701,6 +719,7 @@ export default function SecurityGroup() {
               </Grid>
 
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                {JSON.stringify(groupFunctions)}
                 <QHGrid
                   data={groupFunctions}
                   loading={gridLoading}
@@ -721,13 +740,38 @@ export default function SecurityGroup() {
                   hasActions
                   actionTrigger={(id: number, functionName: string) => {
                     switch (functionName) {
-                      case "edit":
+                      case "liberar":
+                        const objIndex = groupFunctions.findIndex(
+                          (item) => item.id === id
+                        );
+
+                        if (objIndex !== -1) {
+                          const objCopy = {
+                            ...groupFunctions[objIndex],
+                          };
+
+                          objCopy.freeForGroup = !objCopy.freeForGroup;
+                          objCopy.icon = objCopy.freeForGroup
+                            ? "check"
+                            : "clear";
+                          objCopy.color = objCopy.freeForGroup
+                            ? "#43A047"
+                            : "#F44336";
+
+                          const updatedArray = [...groupFunctions];
+
+                          updatedArray[objIndex] = objCopy;
+                          setGroupFunctions(updatedArray);
+                        } else {
+                          console.error(`Nenhum item encontrado.`);
+                        }
+
                         break;
                       case "delete":
-                        const updatedState = groupFunctions.filter(
+                        const updatedArray = groupFunctions.filter(
                           (item) => item.id !== id
                         );
-                        setGroupFunctions(updatedState);
+                        setGroupFunctions(updatedArray);
                     }
                   }}
                   actions={[
@@ -737,9 +781,9 @@ export default function SecurityGroup() {
                       text: "excluir",
                     },
                     {
-                      icon: <Home />,
-                      name: "add",
-                      text: "Liberar",
+                      icon: <PublishedWithChanges />,
+                      name: "liberar",
+                      text: "Liberar/Bloquear",
                     },
                   ]}
                   headers={[
