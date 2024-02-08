@@ -107,11 +107,18 @@ export default function SecurityGroup() {
         }
       );
 
-      console.log("listResponse", listResponse);
-
       if (listResponse.success) {
         setGroupList(listResponse.data.list);
         setGridCount(listResponse.data.count);
+        setGroupId(null);
+        setGroupName("");
+        setGroupActive(false);
+        setGroupSuper(false);
+        setGroupIdentification("");
+        setGroupColor("");
+        setGroupFunctions([]);
+        setFunctionSearchName("");
+        setAutocompleteOptions([]);
       } else throw new Error(listResponse.message);
 
       setGridLoading(false);
@@ -136,6 +143,7 @@ export default function SecurityGroup() {
           Authorization: context.getToken(),
         },
       });
+
       console.log("groupById", groupById);
 
       if (groupById.success) {
@@ -202,7 +210,10 @@ export default function SecurityGroup() {
       setLoading(true);
 
       const parsedFunctionsArray = groupFunctions.map((e) => {
-        return Number(e.id);
+        return {
+          id: Number(e.id),
+          freeForGroup: e.freeForGroup,
+        };
       });
 
       const actionCreated = await fetchApi.post(
@@ -228,9 +239,16 @@ export default function SecurityGroup() {
         setGroupId(null);
         setGroupName("");
         setGroupActive(false);
+        setGroupSuper(false);
+        setGroupIdentification("");
+        setGroupColor("");
+        setGroupFunctions([]);
+        setFunctionSearchName("");
+        setAutocompleteOptions([]);
 
-        searchGroups(null, null);
         setLoading(false);
+        setShowAlert(true);
+        setAlerMessage(actionCreated.message || "");
       } else throw new Error(actionCreated.message);
     } catch (error: any) {
       setGridLoading(false);
@@ -248,7 +266,7 @@ export default function SecurityGroup() {
       if (!groupName) throw new Error("Insira o nome do grupo.");
       setLoading(true);
 
-      const functionsIds = groupFunctions.map((e) => {
+      const functionsParsedArray = groupFunctions.map((e) => {
         return {
           id: Number(e.id),
           freeForGroup: e.freeForGroup,
@@ -264,7 +282,7 @@ export default function SecurityGroup() {
           color: groupColor,
           active: groupActive,
           super: groupSuper,
-          functions: functionsIds,
+          functions: functionsParsedArray,
         },
         {
           headers: {
@@ -479,7 +497,6 @@ export default function SecurityGroup() {
                 </Button>
               </Grid>
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                {JSON.stringify(groupList)}
                 <QHGrid
                   data={groupList}
                   loading={gridLoading}
@@ -688,8 +705,6 @@ export default function SecurityGroup() {
                   options={autocompleteOptions}
                   getOptionLabel={(option) => option.name}
                   onChange={(event, newValue) => {
-                    console.log("newValue", newValue);
-
                     if (newValue) {
                       setGroupFunctions((prev) => [
                         ...(prev || []),
@@ -719,7 +734,6 @@ export default function SecurityGroup() {
               </Grid>
 
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                {JSON.stringify(groupFunctions)}
                 <QHGrid
                   data={groupFunctions}
                   loading={gridLoading}
