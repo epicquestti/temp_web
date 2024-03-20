@@ -1,6 +1,8 @@
 import QHGrid from "@/components/DataGridV2";
 import SpanError from "@/components/SpanError";
 import ViewWrapper from "@/components/ViewWrapper";
+import fetchApi from "@/lib/fetchApi";
+import { moneyMask } from "@/lib/masks";
 import {
   clientRulesForm,
   clientRulesSchema,
@@ -21,7 +23,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 export default function ClientRules() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -48,9 +50,17 @@ export default function ClientRules() {
     reset,
     formState: { errors },
     control,
+    watch,
   } = useForm<clientRulesForm>({
     resolver: zodResolver(clientRulesSchema),
   });
+
+  const selectedMethod = watch("method");
+
+  const createNewRule = async (data: clientRulesForm) => {
+    const controllerResponse = await fetchApi.post("paymentRules/new", data);
+    console.log(controllerResponse);
+  };
 
   return (
     <ViewWrapper
@@ -236,7 +246,7 @@ export default function ClientRules() {
         </Grid>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
-            <form>
+            <form onSubmit={handleSubmit(createNewRule)}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                   <Typography
@@ -259,86 +269,168 @@ export default function ClientRules() {
                   {errors.name && <SpanError errorText={errors.name.message} />}
                 </Grid>
                 <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                  <FormControl fullWidth>
-                    <InputLabel id="methodRuleId">{"Método"}</InputLabel>
-                    <Select labelId="methodRuleId" label="Método">
-                      <MenuItem value={0}>Selecione ...</MenuItem>
-                      <MenuItem value={1}>Desconto direto R$</MenuItem>
-                      <MenuItem value={2}>Desconto percentual %</MenuItem>
-                      <MenuItem value={4}>Acréscimo direto R$</MenuItem>
-                      <MenuItem value={5}>Acréscimo percentual %</MenuItem>
-                    </Select>
-                  </FormControl>
-                  {errors.name && <SpanError errorText={errors.name.message} />}
+                  <Controller
+                    name="method"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field: { onChange, value } }) => (
+                      <FormControl fullWidth>
+                        <InputLabel id="methodRuleId">{"Método"}</InputLabel>
+                        <Select
+                          labelId="methodRuleId"
+                          label="Método"
+                          onChange={(event) => {
+                            onChange(event.target.value);
+                          }}
+                        >
+                          <MenuItem value={0}>Selecione ...</MenuItem>
+                          <MenuItem value={1}>Desconto direto R$</MenuItem>
+                          <MenuItem value={2}>Desconto percentual %</MenuItem>
+                          <MenuItem value={3}>Acréscimo direto R$</MenuItem>
+                          <MenuItem value={4}>Acréscimo percentual %</MenuItem>
+                        </Select>
+                      </FormControl>
+                    )}
+                  />
+                  {errors.method && (
+                    <SpanError errorText={errors.method.message} />
+                  )}
                 </Grid>
-                <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                  <FormControl fullWidth>
-                    <InputLabel id="methodRuleId">{"Alcance"}</InputLabel>
-                    <Select labelId="methodRuleId" label="Alcance">
-                      <MenuItem value={0}>Selecione ...</MenuItem>
-                      <MenuItem value={1}>
-                        Todos os condomínios / todos as mensalidades
-                      </MenuItem>
-                      <MenuItem value={2}>
-                        Nº de condomínios personalizaveis / todos as
-                        mensalidades
-                      </MenuItem>
-                      <MenuItem value={3}>
-                        Todos os condomínios / Nº de mensalidades
-                        personalizaveis
-                      </MenuItem>
-                      <MenuItem value={8}>
-                        Nº de condomínios e Nº de mensalidades personalizaveis.
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-                  {errors.name && <SpanError errorText={errors.name.message} />}
-                </Grid>
-                <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
+                {/* <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                  <Controller
+                    name="reach"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field: { onChange, value } }) => (
+                      <FormControl fullWidth>
+                        <InputLabel id="methodRuleId">{"Alcance"}</InputLabel>
+                        <Select
+                          labelId="methodRuleId"
+                          label="Alcance"
+                          onChange={(event) => {
+                            console.log(event.target.value);
+
+                            onChange(event.target.value);
+                          }}
+                        >
+                          <MenuItem value={0}>Selecione ...</MenuItem>
+                          <MenuItem value={1}>
+                            Todos os condomínios / todos as mensalidades
+                          </MenuItem>
+                          <MenuItem value={2}>
+                            Nº de condomínios personalizaveis / todos as
+                            mensalidades
+                          </MenuItem>
+                          <MenuItem value={3}>
+                            Todos os condomínios / Nº de mensalidades
+                            personalizaveis
+                          </MenuItem>
+                          <MenuItem value={8}>
+                            Nº de condomínios e Nº de mensalidades
+                            personalizaveis.
+                          </MenuItem>
+                        </Select>
+                      </FormControl>
+                    )}
+                  />
+                  {errors.reach && (
+                    <SpanError errorText={errors.reach.message} />
+                  )}
+                </Grid> */}
+                {/* <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
                   <TextField
                     InputLabelProps={{ shrink: true }}
-                    // error={errors.neighborhood ? true : false}
                     fullWidth
                     variant="outlined"
                     label="Nº Condomínios"
-                    placeholder="Entro com o bairro"
-                    // {...register("neighborhood")}
+                    placeholder="Número de condomínios"
+                    {...register("numberOfCondominiums")}
                   />
-                  {errors.name && <SpanError errorText={errors.name.message} />}
-                </Grid>
+                  {errors.numberOfCondominiums && (
+                    <SpanError
+                      errorText={errors.numberOfCondominiums.message}
+                    />
+                  )}
+                </Grid> */}
                 <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
                   <TextField
                     InputLabelProps={{ shrink: true }}
-                    // error={errors.neighborhood ? true : false}
                     fullWidth
                     variant="outlined"
                     label="Nº Mensalidades"
-                    placeholder="Entro com o bairro"
-                    // {...register("neighborhood")}
+                    placeholder="Número de Mensalidades"
+                    {...register("numberOfMontlyPayment")}
                   />
-                  {errors.name && <SpanError errorText={errors.name.message} />}
+                  {errors.numberOfMontlyPayment && (
+                    <SpanError
+                      errorText={errors.numberOfMontlyPayment.message}
+                    />
+                  )}
                 </Grid>
                 <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                  <TextField
-                    InputLabelProps={{ shrink: true }}
-                    // error={errors.neighborhood ? true : false}
-                    fullWidth
-                    variant="outlined"
-                    label="Valor"
-                    placeholder="Entro com o bairro"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Icon>attach_money</Icon>
-                        </InputAdornment>
-                      ),
-                    }}
-                    // {...register("neighborhood")}
-                  />
-                  {errors.name && <SpanError errorText={errors.name.message} />}
+                  {selectedMethod === 1 || selectedMethod === 3 ? (
+                    <>
+                      <TextField
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                        variant="outlined"
+                        label="Valor"
+                        placeholder="Valor da Regra"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Icon>attach_money</Icon>
+                            </InputAdornment>
+                          ),
+                        }}
+                        {...register("ruleValue")}
+                        onChange={(e) => {
+                          const { value } = e.target;
+                          e.target.value = moneyMask(value);
+                        }}
+                      />
+                      {errors.ruleValue && (
+                        <SpanError errorText={errors.ruleValue.message} />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <TextField
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                        variant="outlined"
+                        label="Valor"
+                        placeholder="Valor da Regra"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Icon>percentage</Icon>
+                            </InputAdornment>
+                          ),
+                        }}
+                        {...register("ruleValue")}
+                        onChange={(e) => {
+                          const { value } = e.target;
+                          e.target.value = moneyMask(value);
+                        }}
+                      />
+                      {errors.ruleValue && (
+                        <SpanError errorText={errors.ruleValue.message} />
+                      )}
+                    </>
+                  )}
+
+                  {errors.ruleValue && (
+                    <SpanError errorText={errors.ruleValue.message} />
+                  )}
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                  <Button fullWidth variant="contained" startIcon={<Save />}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    startIcon={<Save />}
+                    type="submit"
+                  >
                     Salvar
                   </Button>
                 </Grid>

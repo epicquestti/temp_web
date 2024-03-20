@@ -48,7 +48,7 @@ export default function SecurityGroup() {
     resolver: zodResolver(userProfileSchema),
   });
 
-  function onSubmitFuction(data: userProfileForm) {
+  function onSubmitFunction(data: userProfileForm) {
     console.log(data);
     return false;
   }
@@ -90,7 +90,7 @@ export default function SecurityGroup() {
       title="Perfil de usuário"
     >
       <Paper sx={{ p: 3 }}>
-        <form onSubmit={handleSubmit(onSubmitFuction)}>
+        <form onSubmit={handleSubmit(onSubmitFunction)}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
               <Grid container spacing={2}>
@@ -177,7 +177,7 @@ export default function SecurityGroup() {
                     fullWidth
                     variant="outlined"
                     label="Celular"
-                    placeholder="Entre com seu celular  ex: (99)699999-9999"
+                    placeholder="Entre com seu celular  ex: (99)99999-9999"
                     {...register("cel")}
                     onChange={(e) => {
                       const { value } = e.target;
