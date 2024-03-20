@@ -1,3 +1,4 @@
+import { useApplicationContext } from "@/context/ApplicationContext";
 import { AccountCircle, Close, Menu } from "@mui/icons-material";
 import {
   Avatar,
@@ -20,7 +21,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useRouter } from "next/router";
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import ApplicationBar from "../ApplicationBar";
 import Drawer from "../Drawer";
 import LoadingBox from "../LoadingBox";
@@ -30,8 +31,16 @@ import { viewWrapperProperties } from "./viewWrapperProperties";
 
 const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
   const router = useRouter();
+  const appContext = useApplicationContext();
   const [lfOpen, setlfOpen] = useState<boolean>(false);
   const [rtOpen, setrtOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const lm = localStorage.getItem("leftMenuState");
+    const rm = localStorage.getItem("rigthMenuState");
+    if (lm) setlfOpen(JSON.parse(lm));
+    if (rm) setrtOpen(JSON.parse(rm));
+  }, []);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -49,13 +58,14 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
               color="inherit"
               onClick={() => {
                 setlfOpen(!lfOpen);
+                localStorage.setItem("leftMenuState", `${!lfOpen}`);
               }}
             >
               <Menu />
             </IconButton>
           </Box>
 
-          <Box sx={{ display: "inline-flex", alignItems: "center" }}>
+          {/* <Box sx={{ display: "inline-flex", alignItems: "center" }}>
             <IconButton
               edge="start"
               color="inherit"
@@ -67,7 +77,7 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
               <Icon>notifications_active</Icon>
               <Icon>notifications_paused</Icon>
             </IconButton>
-          </Box>
+          </Box> */}
 
           <Box sx={{ display: "inline-flex", alignItems: "center" }}>
             <IconButton
@@ -75,6 +85,7 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
               color="inherit"
               onClick={() => {
                 setrtOpen(!rtOpen);
+                localStorage.setItem("rigthMenuState", `${!rtOpen}`);
               }}
             >
               <AccountCircle />
@@ -120,71 +131,21 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
               }}
               component="nav"
             >
-              <ListItemButton
-                onClick={() => {
-                  router.push("/actions");
-                }}
-              >
-                <ListItemIcon>
-                  <Icon>settings_accessibility</Icon>
-                </ListItemIcon>
-                <ListItemText primary="Ações" />
-              </ListItemButton>
-
-              <ListItemButton
-                onClick={() => {
-                  router.push("/functions");
-                }}
-              >
-                <ListItemIcon>
-                  <Icon>pending_actions</Icon>
-                </ListItemIcon>
-                <ListItemText primary="Funções" />
-              </ListItemButton>
-
-              <ListItemButton
-                onClick={() => {
-                  router.push("/securityGroup");
-                }}
-              >
-                <ListItemIcon>
-                  <Icon>group_work</Icon>
-                </ListItemIcon>
-                <ListItemText primary="Grupos de segurança" />
-              </ListItemButton>
-
-              <ListItemButton
-                onClick={() => {
-                  router.push("/clientRules");
-                }}
-              >
-                <ListItemIcon>
-                  <Icon>gavel</Icon>
-                </ListItemIcon>
-                <ListItemText primary="Regras personalizadas" />
-              </ListItemButton>
-
-              <ListItemButton
-                onClick={() => {
-                  router.push("/customer");
-                }}
-              >
-                <ListItemIcon>
-                  <Icon>person_pin_circle</Icon>
-                </ListItemIcon>
-                <ListItemText primary="Clientes" />
-              </ListItemButton>
-
-              <ListItemButton
-                onClick={() => {
-                  router.push("/plans");
-                }}
-              >
-                <ListItemIcon>
-                  <Icon>assignment</Icon>
-                </ListItemIcon>
-                <ListItemText primary="Planos" />
-              </ListItemButton>
+              {appContext.usuario
+                ? appContext.usuario.menu.left.map((menuItem, index) => (
+                    <ListItemButton
+                      key={`menu-left-${index}-item`}
+                      onClick={() => {
+                        router.push(menuItem.path);
+                      }}
+                    >
+                      <ListItemIcon>
+                        <Icon>{menuItem.icon}</Icon>
+                      </ListItemIcon>
+                      <ListItemText primary={menuItem.name} />
+                    </ListItemButton>
+                  ))
+                : ""}
             </List>
           )}
         </Toolbar>
@@ -229,7 +190,14 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
                     justifyContent: "center",
                   }}
                 >
-                  <Avatar sx={{ width: 102, height: 102 }} />
+                  {appContext.usuario?.photo ? (
+                    <Avatar
+                      sx={{ width: 102, height: 102 }}
+                      src={appContext.usuario?.photo}
+                    />
+                  ) : (
+                    <Avatar sx={{ width: 102, height: 102 }} />
+                  )}
                 </Box>
               </ListItem>
               <ListItem>
@@ -240,34 +208,41 @@ const ViewWrapper: FC<viewWrapperProperties> = ({ ...props }) => {
                     justifyContent: "center",
                   }}
                 >
-                  <i>nome do usuário</i>
+                  <i>{appContext.usuario?.name}</i>
                 </Box>
               </ListItem>
               <Divider />
               <ListItem>
                 <Typography variant="caption">menu do usuário</Typography>
               </ListItem>
-              <ListItemButton
-                onClick={() => {
-                  router.push("/userProfile");
-                }}
-              >
-                <ListItemIcon>
-                  <Icon>contact_page</Icon>
-                </ListItemIcon>
-                <ListItemText primary="Perfil" />
-              </ListItemButton>
-              <ListItemButton>
-                <ListItemIcon>
-                  <Icon>settings</Icon>
-                </ListItemIcon>
-                <ListItemText primary="Configurações" />
-              </ListItemButton>
+
+              {appContext.usuario
+                ? appContext.usuario.menu.right.map((menuItem, index) => (
+                    <ListItemButton
+                      key={`menu-left-${index}-item`}
+                      onClick={() => {
+                        router.push(menuItem.path);
+                      }}
+                    >
+                      <ListItemIcon>
+                        <Icon>{menuItem.icon}</Icon>
+                      </ListItemIcon>
+                      <ListItemText primary={menuItem.name} />
+                    </ListItemButton>
+                  ))
+                : ""}
+
               <Divider />
+
               <ListItem>
                 <Typography variant="caption">finalizar sessão</Typography>
               </ListItem>
-              <ListItemButton>
+
+              <ListItemButton
+                onClick={() => {
+                  appContext.logout();
+                }}
+              >
                 <ListItemIcon>
                   <Icon>close</Icon>
                 </ListItemIcon>

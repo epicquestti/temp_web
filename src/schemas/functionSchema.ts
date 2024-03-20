@@ -18,14 +18,12 @@ export const functionSchema = z.object({
     .string()
     .min(3, "url da função deve ter ao menos 3 caracteres")
     .max(300, "url da função deve conter ao máximo 100 caracteres"),
-  deviceComponent: z.object({
-    id: z.number(),
-    name: z.string(),
-  }),
+  deviceComponent: z.string(),
   visible: z.boolean(),
   functionActions: z.array(
     z.object({
-      id: z.number(),
+      id: z.string(),
+      checked: z.boolean(),
       name: z.string(),
     })
   ),

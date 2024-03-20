@@ -43,16 +43,24 @@ const ApplicationContextControll: FC<{ children?: ReactNode }> = ({
 
   useEffect(() => {
     const ls = localStorage.getItem(appConfig.identifier);
+
     const { epicquest } = cookie;
+
     if (ls) {
       const u = JSON.parse(ls);
+
       if (u) setUsuario(u);
     } else if (epicquest) setContingencyControll(true);
+    else {
+      if (window.location.pathname !== "/authentication")
+        window.location.href = "/authentication";
+    }
   }, []);
 
   useEffect(() => {
     if (usuario) {
       localStorage.setItem(appConfig.identifier, JSON.stringify(usuario));
+
       setCookie(appConfig.identifier, usuario.token, {
         path: "/",
       });
