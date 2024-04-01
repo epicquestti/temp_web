@@ -59,7 +59,6 @@ export default function ClientRules() {
 
   const createNewRule = async (data: clientRulesForm) => {
     const controllerResponse = await fetchApi.post("paymentRules/new", data);
-    console.log(controllerResponse);
   };
 
   return (
@@ -296,62 +295,6 @@ export default function ClientRules() {
                     <SpanError errorText={errors.method.message} />
                   )}
                 </Grid>
-                {/* <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                  <Controller
-                    name="reach"
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field: { onChange, value } }) => (
-                      <FormControl fullWidth>
-                        <InputLabel id="methodRuleId">{"Alcance"}</InputLabel>
-                        <Select
-                          labelId="methodRuleId"
-                          label="Alcance"
-                          onChange={(event) => {
-                            console.log(event.target.value);
-
-                            onChange(event.target.value);
-                          }}
-                        >
-                          <MenuItem value={0}>Selecione ...</MenuItem>
-                          <MenuItem value={1}>
-                            Todos os condomínios / todos as mensalidades
-                          </MenuItem>
-                          <MenuItem value={2}>
-                            Nº de condomínios personalizaveis / todos as
-                            mensalidades
-                          </MenuItem>
-                          <MenuItem value={3}>
-                            Todos os condomínios / Nº de mensalidades
-                            personalizaveis
-                          </MenuItem>
-                          <MenuItem value={8}>
-                            Nº de condomínios e Nº de mensalidades
-                            personalizaveis.
-                          </MenuItem>
-                        </Select>
-                      </FormControl>
-                    )}
-                  />
-                  {errors.reach && (
-                    <SpanError errorText={errors.reach.message} />
-                  )}
-                </Grid> */}
-                {/* <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
-                  <TextField
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                    variant="outlined"
-                    label="Nº Condomínios"
-                    placeholder="Número de condomínios"
-                    {...register("numberOfCondominiums")}
-                  />
-                  {errors.numberOfCondominiums && (
-                    <SpanError
-                      errorText={errors.numberOfCondominiums.message}
-                    />
-                  )}
-                </Grid> */}
                 <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
                   <TextField
                     InputLabelProps={{ shrink: true }}
