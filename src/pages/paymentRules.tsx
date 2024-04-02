@@ -272,8 +272,7 @@ export default function PaymentRules() {
         setMethod(() => `${ruleById.data.methodId}`);
         setActive(ruleById.data.active);
         setNumberOfMonthlyPayment(ruleById.data.numberOfMontlyPayment);
-        // setRuleValue(ruleById.data.ruleValue.toString().replace(".", ","));
-        setRuleValue(ruleById.data.ruleValue.toString());
+        setRuleValue(moneyMask(parseFloat(ruleById.data.ruleValue).toFixed(2)));
       }
 
       setLoading(false);
