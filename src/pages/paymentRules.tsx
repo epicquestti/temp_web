@@ -32,6 +32,14 @@ import {
 } from "@mui/material";
 import { ChangeEvent, useEffect, useState } from "react";
 
+type paymentRuleProps = {
+  method: number;
+  name: string;
+  numberOfMonthlyPayment: number;
+  ruleValue: number;
+  active: boolean;
+};
+
 export default function PaymentRules() {
   const [loading, setLoading] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(false);
@@ -41,6 +49,7 @@ export default function PaymentRules() {
     { id: number; name: string }[]
   >([]);
 
+  const [ruleId, setRuleId] = useState<number | null>(null);
   const [name, setName] = useState<string>("");
   const [method, setMethod] = useState<string>("");
   const [numberOfMonthlyPayment, setNumberOfMonthlyPayment] =
@@ -48,7 +57,18 @@ export default function PaymentRules() {
   const [ruleValue, setRuleValue] = useState<string>("0,00");
   const [active, setActive] = useState<boolean>(false);
 
-  const [gridArray, setGridArray] = useState<any[]>([]);
+  const [gridArray, setGridArray] = useState<
+    {
+      active: boolean;
+      createdAt: Date;
+      createdById: bigint;
+      id: bigint;
+      methodId: bigint;
+      name: string;
+      numberOfMontlyPayment: number;
+      ruleValue: number;
+    }[]
+  >([]);
   const [gridLoading, setGridLoading] = useState<boolean>(false);
   const [gridCount, setGridCount] = useState<number>(0);
   const [rowsPerPage, setRowsPerPage] = useState<number>(5);
@@ -66,7 +86,13 @@ export default function PaymentRules() {
 
   const initialSetup = async () => {
     const controllerResponse = await fetchApi.get(
-      "/paymentRules/getAllPaymentRulesMethods"
+      "/paymentRules/getAllPaymentRulesMethods",
+      {
+        headers: {
+          Authorization: context.getToken(),
+          "router-id": "WEB#API",
+        },
+      }
     );
 
     if (controllerResponse.success) {
@@ -91,7 +117,7 @@ export default function PaymentRules() {
     return false;
   };
 
-  const createNewRule = async () => {
+  const createOrEditRule = async () => {
     try {
       setLoading(true);
       //Validar os campos
@@ -108,6 +134,55 @@ export default function PaymentRules() {
       }
 
       //Enviar para API
+      const ruleObj: paymentRuleProps = {
+        active: active,
+        method: parseInt(method),
+        name: name,
+        numberOfMonthlyPayment: parseInt(numberOfMonthlyPayment),
+        ruleValue: parseFloat(ruleValue.replaceAll(".", "").replace(",", ".")),
+      };
+      let apiAddress: string = "";
+      if (ruleId !== null) {
+        //Enviar para Editar
+        apiAddress = `/paymentRules/update/${ruleId}`;
+        setLoading(false);
+        return;
+      } else {
+        apiAddress = "/paymentRules/new";
+      }
+
+      const controllerResponse = await fetchApi.post(apiAddress, ruleObj, {
+        headers: {
+          Authorization: context.getToken(),
+          "router-id": "WEB#API",
+        },
+      });
+
+      if (controllerResponse.success) {
+        setName("");
+        setMethod("0");
+        setActive(false);
+        setNumberOfMonthlyPayment("0");
+        setRuleValue("0,00");
+
+        setLoading(false);
+        setAlerMessage("Regra de Pagamento criada com sucesso.");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 6000);
+      } else {
+        setLoading(false);
+        setAlerMessage(
+          controllerResponse.message
+            ? controllerResponse.message
+            : "Erro ao criar Regra de Pagamento."
+        );
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 6000);
+      }
 
       setLoading(false);
     } catch (error: any) {
@@ -128,13 +203,29 @@ export default function PaymentRules() {
     try {
       setGridLoading(true);
 
+      setName("");
+      setMethod("0");
+      setActive(false);
+      setNumberOfMonthlyPayment("0");
+      setRuleValue("0,00");
+      setRuleId(null);
+
+      const methodId =
+        parseInt(methodSearch) < 1 ? null : parseInt(methodSearch);
+      const numberOfMonths =
+        numberOfMonthlyPaymentSearch < 1 ? null : numberOfMonthlyPaymentSearch;
+      const valueSearch =
+        parseFloat(ruleValueSearch) < 1
+          ? null
+          : parseFloat(ruleValueSearch.replaceAll(".", "").replace(",", "."));
+
       const listResponse = await fetchApi.post(
         "/paymentRules",
         {
           name: nameSearch,
-          method: methodSearch,
-          numberOfMonthlyPayment: numberOfMonthlyPaymentSearch,
-          ruleValue: ruleValueSearch,
+          method: methodId,
+          numberOfMonthlyPayment: numberOfMonths,
+          ruleValue: valueSearch,
           page: pageParam !== null ? pageParam : page,
           take: rowPerPageParam !== null ? rowPerPageParam : rowsPerPage,
         },
@@ -146,9 +237,46 @@ export default function PaymentRules() {
         }
       );
 
-      console.log("listResponse", listResponse);
+      if (listResponse.success) {
+        setGridArray(listResponse.data.list);
+
+        setGridCount(parseInt(listResponse.data.count));
+      }
 
       setGridLoading(false);
+    } catch (error: any) {
+      setGridLoading(false);
+      setLoading(false);
+      setAlerMessage(error.message);
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 6000);
+    }
+  };
+
+  const catchThisRuleToEdit = async (id: number) => {
+    try {
+      setLoading(true);
+
+      const ruleById = await fetchApi.get(`/paymentRules/${id}`, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      });
+
+      if (ruleById.success) {
+        setRuleId(ruleById.data.id);
+        setName(ruleById.data.name);
+        setMethod(() => `${ruleById.data.methodId}`);
+        setActive(ruleById.data.active);
+        setNumberOfMonthlyPayment(ruleById.data.numberOfMontlyPayment);
+        // setRuleValue(ruleById.data.ruleValue.toString().replace(".", ","));
+        setRuleValue(ruleById.data.ruleValue.toString());
+      }
+
+      setLoading(false);
     } catch (error: any) {
       setGridLoading(false);
       setLoading(false);
@@ -264,16 +392,21 @@ export default function PaymentRules() {
                       fullWidth
                       value={numberOfMonthlyPaymentSearch}
                       variant="outlined"
-                      label="Nº Mensalidades"
+                      label="Nº Máximo de Mensalidades"
                       placeholder="Número de Mensalidades"
                       onChange={(
                         event: ChangeEvent<
                           HTMLInputElement | HTMLTextAreaElement
                         >
                       ): void => {
-                        setnumberOfMonthlyPaymentSearch(
-                          parseInt(event.target.value)
-                        );
+                        const { value } = event.target;
+                        if (isNaN(parseInt(value))) {
+                          setnumberOfMonthlyPaymentSearch(0);
+                        } else {
+                          setnumberOfMonthlyPaymentSearch(
+                            parseInt(event.target.value)
+                          );
+                        }
                       }}
                     />
                   </Grid>
@@ -285,7 +418,8 @@ export default function PaymentRules() {
                           InputLabelProps={{ shrink: true }}
                           fullWidth
                           variant="outlined"
-                          label="Valor"
+                          label="Valor Máximo"
+                          value={ruleValueSearch}
                           placeholder="Valor da Regra"
                           InputProps={{
                             startAdornment: (
@@ -294,9 +428,18 @@ export default function PaymentRules() {
                               </InputAdornment>
                             ),
                           }}
-                          onChange={(e) => {
-                            const { value } = e.target;
-                            e.target.value = moneyMask(value);
+                          onChange={(
+                            event: ChangeEvent<
+                              HTMLInputElement | HTMLTextAreaElement
+                            >
+                          ) => {
+                            const { value } = event.target;
+
+                            if (isNaN(parseInt(value))) {
+                              setRuleValueSearch("0,00");
+                            } else {
+                              setRuleValueSearch(moneyMask(value));
+                            }
                           }}
                         />
                       </>
@@ -306,7 +449,8 @@ export default function PaymentRules() {
                           InputLabelProps={{ shrink: true }}
                           fullWidth
                           variant="outlined"
-                          label="Valor"
+                          label="Valor Máximo"
+                          value={ruleValueSearch}
                           placeholder="Valor da Regra"
                           InputProps={{
                             startAdornment: (
@@ -315,9 +459,18 @@ export default function PaymentRules() {
                               </InputAdornment>
                             ),
                           }}
-                          onChange={(e) => {
-                            const { value } = e.target;
-                            e.target.value = moneyMask(value);
+                          onChange={(
+                            event: ChangeEvent<
+                              HTMLInputElement | HTMLTextAreaElement
+                            >
+                          ) => {
+                            const { value } = event.target;
+
+                            if (isNaN(parseInt(value))) {
+                              setRuleValueSearch("0,00");
+                            } else {
+                              setRuleValueSearch(moneyMask(value));
+                            }
                           }}
                         />
                       </>
@@ -329,6 +482,9 @@ export default function PaymentRules() {
                       variant="contained"
                       startIcon={<Search />}
                       type="submit"
+                      onClick={() => {
+                        searchRules(null, null);
+                      }}
                     >
                       Pesquisar
                     </Button>
@@ -353,9 +509,10 @@ export default function PaymentRules() {
                       }}
                       hasActions
                       actionTrigger={(id: number, ruleName: string) => {
+                        console.log(ruleName);
                         switch (ruleName) {
                           case "edit":
-                            () => {};
+                            catchThisRuleToEdit(id);
                             break;
                           case "delete":
                             () => {};
@@ -387,27 +544,35 @@ export default function PaymentRules() {
                         {
                           text: "Nome",
                           attrName: "name",
-                          width: 5,
+                          width: 4,
                         },
                         {
                           text: "Método",
-                          attrName: "method",
-                          width: 2,
+                          attrName: "methodName",
+                          width: 3,
+                          align: "center",
                         },
                         {
-                          text: "Número de Mensalidades",
-                          attrName: "numberOfMonthlyPayment",
+                          text: "Nº de Mensalidades",
+                          attrName: "numberOfMontlyPayment",
                           width: 3,
+                          align: "center",
                         },
                         {
                           text: "Valor",
                           attrName: "ruleValue",
                           width: 2,
+                          align: "center",
                         },
                         {
                           text: "Ativo",
                           attrName: "active",
                           width: 2,
+                          align: "center",
+                          custom: {
+                            isIcon: true,
+                            color: "color",
+                          },
                         },
                       ]}
                     />
@@ -431,7 +596,9 @@ export default function PaymentRules() {
                   variant="h6"
                   sx={{ color: (theme) => theme.palette.secondary.light }}
                 >
-                  Crie/Edite Regras de Pagamento
+                  {ruleId === null
+                    ? "Crie Regras de Pagamento"
+                    : "Edite Regras de Pagamento"}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
@@ -570,15 +737,33 @@ export default function PaymentRules() {
                   </>
                 )}
               </Grid>
+              <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  startIcon={<Delete />}
+                  type="submit"
+                  onClick={() => {
+                    setName("");
+                    setMethod("0");
+                    setActive(false);
+                    setNumberOfMonthlyPayment("0");
+                    setRuleValue("0,00");
+                    setRuleId(null);
+                  }}
+                >
+                  Limpar Dados
+                </Button>
+              </Grid>
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                 <Button
                   fullWidth
                   variant="contained"
                   startIcon={<Save />}
                   type="submit"
-                  onClick={createNewRule}
+                  onClick={createOrEditRule}
                 >
-                  Criar Nova Regra
+                  {ruleId === null ? "Criar Nova Regra" : "Editar Regra"}
                 </Button>
               </Grid>
             </Grid>
