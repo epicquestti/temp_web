@@ -14,6 +14,11 @@ import {
 import {
   Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControl,
   FormControlLabel,
   FormGroup,
@@ -75,6 +80,7 @@ export default function PaymentRules() {
   const [take, setTake] = useState<number>(10);
   const [page, setPage] = useState<number>(0);
   const [showSearch, setShowSearch] = useState<boolean>(false);
+  const [showDeleteQuestion, setShowDeleteQuestion] = useState<boolean>(false);
 
   const [nameSearch, setNameSearch] = useState<string>("");
   const [methodSearch, setMethodSearch] = useState<string>("");
@@ -102,6 +108,7 @@ export default function PaymentRules() {
 
   useEffect(() => {
     initialSetup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const validateAndAlert = (condition: boolean, message: string): boolean => {
@@ -143,10 +150,11 @@ export default function PaymentRules() {
       };
       let apiAddress: string = "";
       if (ruleId !== null) {
+        console.log("Editando...");
         //Enviar para Editar
         apiAddress = `/paymentRules/update/${ruleId}`;
+        console.log("apiAddress", apiAddress);
         setLoading(false);
-        return;
       } else {
         apiAddress = "/paymentRules/new";
       }
@@ -166,7 +174,11 @@ export default function PaymentRules() {
         setRuleValue("0,00");
 
         setLoading(false);
-        setAlerMessage("Regra de Pagamento criada com sucesso.");
+        setAlerMessage(
+          ruleId !== null
+            ? "Regra Editada com sucesso."
+            : "Regra de Pagamento criada com sucesso."
+        );
         setShowAlert(true);
         setTimeout(() => {
           setShowAlert(false);
@@ -284,6 +296,66 @@ export default function PaymentRules() {
       setTimeout(() => {
         setShowAlert(false);
       }, 6000);
+    }
+  };
+
+  const catchThisRuleToDelete = async (id: number) => {
+    try {
+      setLoading(true);
+
+      const ruleById = await fetchApi.get(`/paymentRules/${id}`, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      });
+
+      if (ruleById.success) {
+        setRuleId(ruleById.data.id);
+        setName(ruleById.data.name);
+        setShowDeleteQuestion(true);
+      }
+
+      setLoading(false);
+    } catch (error: any) {
+      setLoading(false);
+      console.log(error.message);
+    }
+  };
+
+  const deleteRule = async () => {
+    try {
+      setLoading(true);
+      setShowDeleteQuestion(false);
+
+      const deleteResponse = await fetchApi.del(
+        `/paymentRules/delete/${ruleId}`,
+        {
+          headers: {
+            "router-id": "WEB#API",
+            Authorization: context.getToken(),
+          },
+        }
+      );
+
+      console.log("deleteResponse", deleteResponse);
+      if (deleteResponse.success) {
+        setLoading(false);
+        setAlerMessage(
+          deleteResponse.message
+            ? deleteResponse.message
+            : "Erro ao excluir regra de pagamento."
+        );
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 6000);
+      }
+
+      setLoading(false);
+    } catch (error: any) {
+      setLoading(false);
+      console.log(error.message);
     }
   };
 
@@ -514,7 +586,7 @@ export default function PaymentRules() {
                             catchThisRuleToEdit(id);
                             break;
                           case "delete":
-                            () => {};
+                            catchThisRuleToDelete(id);
                             break;
                           default:
                             setGridLoading(false);
@@ -769,6 +841,40 @@ export default function PaymentRules() {
           </Paper>
         </Grid>
       </Grid>
+      <Dialog
+        open={showDeleteQuestion}
+        onClose={() => {
+          setShowDeleteQuestion(false);
+        }}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Confirmação de exclusão de regra de pagamento.
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Tem certeza que deseja excluir a regra: &quot;{name}&quot; ?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowDeleteQuestion(false);
+            }}
+          >
+            cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              deleteRule();
+            }}
+            autoFocus
+          >
+            Confirmar Exclusão.
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ViewWrapper>
   );
 }
