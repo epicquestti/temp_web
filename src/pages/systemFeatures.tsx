@@ -1,5 +1,7 @@
 import QHGrid from "@/components/DataGridV2";
 import ViewWrapper from "@/components/ViewWrapper";
+import { useApplicationContext } from "@/context/ApplicationContext";
+import fetchApi from "@/lib/fetchApi";
 import {
   Delete,
   Edit,
@@ -23,8 +25,10 @@ import {
   Typography,
 } from "@mui/material";
 import dynamic from "next/dynamic";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
+
 import "suneditor/dist/css/suneditor.min.css";
+import SunEditorCore from "suneditor/src/lib/core";
 const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
 });
@@ -34,46 +38,234 @@ export default function SystemFeatures() {
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alerMessage, setAlerMessage] = useState<string>("");
 
-  const [toolId, setToolId] = useState<number | null>(null);
+  const [featureId, setFeatureId] = useState<number | null>(null);
   const [name, setName] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
   const [descriptionHTML, setDescriptionHTML] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
 
   const [nameSearch, setNameSearch] = useState<string>("");
-  const [editorContent, setEditorContent] = useState<string>("");
+  const editor = useRef<SunEditorCore>();
 
   const [gridArray, setGridArray] = useState<
     {
-      active: boolean;
-      createdAt: Date;
-      createdById: bigint;
-      id: bigint;
-      methodId: bigint;
+      id?: bigint;
       name: string;
-      numberOfMontlyPayment: number;
-      ruleValue: number;
+      descriptionHTML: string;
     }[]
   >([]);
   const [gridLoading, setGridLoading] = useState<boolean>(false);
   const [gridCount, setGridCount] = useState<number>(0);
   const [rowsPerPage, setRowsPerPage] = useState<number>(5);
-  const [take, setTake] = useState<number>(10);
   const [page, setPage] = useState<number>(0);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [showDeleteQuestion, setShowDeleteQuestion] = useState<boolean>(false);
 
-  const searchTools = async (
+  const context = useApplicationContext();
+
+  const getSunEditorInstance = (sunEditor: any) => {
+    editor.current = sunEditor;
+  };
+
+  const createOrEditTool = async () => {
+    try {
+      setLoading(true);
+      let apiAddress: string = "";
+
+      if (!name) {
+        setLoading(false);
+        setAlerMessage("Por favor, preencha o nome da ferramenta do App.");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 6000);
+        return;
+      }
+
+      if (featureId) {
+        apiAddress = `/systemFeatures/update/${featureId}`;
+      } else {
+        apiAddress = "/systemFeatures/new";
+      }
+
+      const systemFeatureObj = {
+        name: name,
+        descriptionHTML: descriptionHTML,
+        description: description,
+      };
+
+      const controllerResponse = await fetchApi.post(
+        apiAddress,
+        systemFeatureObj,
+        {
+          headers: {
+            Authorization: context.getToken(),
+            "router-id": "WEB#API",
+          },
+        }
+      );
+
+      console.log("controllerResponse", controllerResponse);
+
+      if (controllerResponse.success) {
+        setLoading(false);
+        setName("");
+        setDescription("");
+        setDescriptionHTML("");
+        setAlerMessage(
+          controllerResponse.message
+            ? controllerResponse.message
+            : "Ferramenta do App criada/editada com sucesso."
+        );
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 6000);
+        return;
+      } else {
+        setLoading(false);
+        setAlerMessage(
+          controllerResponse.message
+            ? controllerResponse.message
+            : "Erro ao criar/editar Ferramenta do App."
+        );
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 6000);
+        return;
+      }
+    } catch (error: any) {
+      console.log(error.message);
+    }
+  };
+
+  const searchSystemFeatures = async (
     pageParam: number | null,
     rowPerPageParam: number | null
-  ) => {};
+  ) => {
+    try {
+      setGridLoading(true);
+      setName("");
+      setDescription("");
+      setDescriptionHTML("");
 
-  const catchThisToolToEdit = async (id: number) => {};
+      const listObj = {
+        name: nameSearch,
+        page: pageParam !== null ? pageParam : page,
+        take: rowPerPageParam !== null ? rowPerPageParam : rowsPerPage,
+      };
 
-  const catchThisToolToDelete = async (id: number) => {};
+      const listResponse = await fetchApi.post("/systemFeatures", listObj, {
+        headers: {
+          Authorization: context.getToken(),
+          "router-id": "WEB#API",
+        },
+      });
 
-  const deleteTool = async () => {};
+      if (listResponse.success) {
+        setGridArray(listResponse.data.list);
 
-  const createOrEditTool = async () => {};
+        setGridCount(parseInt(listResponse.data.count));
+      }
+
+      setGridLoading(false);
+    } catch (error: any) {
+      console.log(error.message);
+      setGridLoading(false);
+      return;
+    }
+  };
+
+  const catchThisFeatureToEdit = async (id: number) => {
+    try {
+      setLoading(true);
+
+      const systemById = await fetchApi.get(`/systemFeatures/${id}`, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      });
+
+      if (systemById.success) {
+        setFeatureId(systemById.data.id);
+        setName(systemById.data.name);
+        setDescription(systemById.data.description);
+        setDescriptionHTML(systemById.data.descriptionHTML);
+      }
+
+      setLoading(false);
+    } catch (error: any) {
+      setGridLoading(false);
+      setLoading(false);
+      setAlerMessage(error.message);
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 6000);
+    }
+  };
+
+  const catchThisFeatureToDelete = async (id: number) => {
+    try {
+      setLoading(true);
+
+      const systemById = await fetchApi.get(`/systemFeatures/${id}`, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      });
+
+      if (systemById.success) {
+        setFeatureId(systemById.data.id);
+        setName(systemById.data.name);
+        setShowDeleteQuestion(true);
+      }
+
+      setLoading(false);
+    } catch (error: any) {
+      setLoading(false);
+      console.log(error.message);
+    }
+  };
+
+  const deleteSystemFeature = async () => {
+    try {
+      setLoading(true);
+      setShowDeleteQuestion(false);
+
+      const deleteResponse = await fetchApi.del(
+        `/systemFeatures/delete/${featureId}`,
+        {
+          headers: {
+            "router-id": "WEB#API",
+            Authorization: context.getToken(),
+          },
+        }
+      );
+
+      console.log("deleteResponse", deleteResponse);
+      if (deleteResponse.success) {
+        setLoading(false);
+        setAlerMessage(
+          deleteResponse.message
+            ? deleteResponse.message
+            : "Erro ao excluir Ferramenta do App."
+        );
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 6000);
+        searchSystemFeatures(null, null);
+      }
+
+      setLoading(false);
+    } catch (error: any) {
+      setLoading(false);
+      console.log(error.message);
+    }
+  };
 
   return (
     <ViewWrapper
@@ -157,7 +349,7 @@ export default function SystemFeatures() {
                       startIcon={<Search />}
                       type="submit"
                       onClick={() => {
-                        searchTools(null, null);
+                        searchSystemFeatures(null, null);
                       }}
                     >
                       Pesquisar
@@ -174,11 +366,11 @@ export default function SystemFeatures() {
                         rowsPerPageOptions: [5, 10, 20, 40, 50, 100],
                         onRowsPerPageChange(rowsPerPAge) {
                           setRowsPerPage(rowsPerPAge);
-                          searchTools(null, rowsPerPAge);
+                          searchSystemFeatures(null, rowsPerPAge);
                         },
                         onPageChange(page) {
                           setPage(page);
-                          searchTools(page, null);
+                          searchSystemFeatures(page, null);
                         },
                       }}
                       hasActions
@@ -186,10 +378,10 @@ export default function SystemFeatures() {
                         console.log(ruleName);
                         switch (ruleName) {
                           case "edit":
-                            catchThisToolToEdit(id);
+                            catchThisFeatureToEdit(id);
                             break;
                           case "delete":
-                            catchThisToolToDelete(id);
+                            catchThisFeatureToDelete(id);
                             break;
                           default:
                             setGridLoading(false);
@@ -248,7 +440,7 @@ export default function SystemFeatures() {
                   variant="h6"
                   sx={{ color: (theme) => theme.palette.secondary.light }}
                 >
-                  {toolId === null
+                  {featureId === null
                     ? "Crie Ferramentas do App"
                     : "Edite Ferramentas do App"}
                 </Typography>
@@ -275,13 +467,19 @@ export default function SystemFeatures() {
                   Descrição da Ferramenta
                 </Typography>
               </Grid>
-              {JSON.stringify(editorContent)}
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                 <SunEditor
                   lang="pt_br"
+                  setAllPlugins
                   height="300"
-                  setContents={editorContent}
-                  onChange={(contents) => setEditorContent(contents)}
+                  // setOptions={{ buttonList: buttonList.complex }}
+                  setContents={descriptionHTML}
+                  onChange={(contents: string) => {
+                    setDescriptionHTML(contents);
+                    const aa = editor.current?.getText();
+                    setDescription(aa ? aa : "");
+                  }}
+                  getSunEditorInstance={getSunEditorInstance}
                 />
               </Grid>
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
@@ -292,7 +490,7 @@ export default function SystemFeatures() {
                   type="submit"
                   onClick={createOrEditTool}
                 >
-                  {toolId === null
+                  {featureId === null
                     ? "Criar Nova Ferramenta"
                     : "Editar Ferramenta"}
                 </Button>
@@ -327,7 +525,7 @@ export default function SystemFeatures() {
           </Button>
           <Button
             onClick={() => {
-              deleteTool();
+              deleteSystemFeature();
             }}
             autoFocus
           >
