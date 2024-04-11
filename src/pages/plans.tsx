@@ -16,6 +16,11 @@ import {
   Box,
   Button,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControl,
   FormControlLabel,
   Grid,
@@ -189,6 +194,7 @@ export default function Plans() {
     });
 
     if (planById.success) {
+      setPlanId(planById.data.id);
       setName(planById.data.name);
       setGroupId(planById.data.group.id);
       setDisplayOnSite(planById.data.displayOnSite);
@@ -202,7 +208,6 @@ export default function Plans() {
             Authorization: context.getToken(),
           },
         });
-        console.log("allFeatures", allFeatures);
         const planFeatures = planById.data.PlansFeatures.map((item: any) => {
           return {
             id: item.systemFeature.id,
@@ -210,19 +215,51 @@ export default function Plans() {
           };
         });
 
-        for (const feature of allFeatures.data) {
-          // Check if the feature's id exists in planFeatures using some()
-          feature.checked = planFeatures.data?.some(
-            (planFeature: any) => planFeature.id === feature.id || false
-          );
-        }
+        const matchingFeaturesIds = planFeatures.map(
+          (item: { id: string; name: string }) => item.id
+        );
 
-        console.log("allFeatures.data", allFeatures.data);
+        setSelectedFeaturesArray(matchingFeaturesIds);
+
+        let matchingFeatures = [...allFeatures.data];
+
+        for (let i = 0; i < allFeatures.data.length; i++) {
+          for (let j = 0; j < planFeatures.length; j++) {
+            if (planFeatures[j].id === allFeatures.data[i].id) {
+              matchingFeatures[i] = {
+                id: planFeatures[j].id,
+                name: planFeatures[j].name,
+                checked: true,
+              };
+            }
+          }
+        }
+        setSystemFeaturesArray(matchingFeatures);
       }
     }
   };
 
-  const catchThisPlanToDelete = async (id: number) => {};
+  const catchThisPlanToDelete = async (id: number) => {
+    try {
+      setLoading(true);
+      const planById = await fetchApi.get(`/plans/${id}`, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      });
+
+      if (planById.success) {
+        setPlanId(planById.data.id);
+        setName(planById.data.name);
+        setShowDeleteQuestion(true);
+      }
+      setLoading(false);
+    } catch (error: any) {
+      setLoading(false);
+      console.log(error.message);
+    }
+  };
 
   const handleChange = (event: SelectChangeEvent<number[]>, object: any) => {
     const appFuncIndexChecked = object.props["data-this-checked"];
@@ -239,110 +276,7 @@ export default function Plans() {
     setSystemFeaturesArray(tempSystemFeaturesArray);
   };
 
-  // const searchRules = async (
-  //   pageParam: number | null,
-  //   rowPerPageParam: number | null
-  // ) => {
-  //   try {
-  //     setGridLoading(true);
-
-  //     const methodId =
-  //       parseInt(methodSearch) < 1 ? null : parseInt(methodSearch);
-  //     const numberOfMonths =
-  //       numberOfMonthlyPaymentSearch < 1 ? null : numberOfMonthlyPaymentSearch;
-  //     const valueSearch =
-  //       parseFloat(ruleValueSearch) < 1
-  //         ? null
-  //         : parseFloat(ruleValueSearch.replaceAll(".", "").replace(",", "."));
-
-  //     const listResponse = await fetchApi.post(
-  //       "/paymentRules",
-  //       {
-  //         name: nameSearch,
-  //         method: methodId,
-  //         numberOfMonthlyPayment: numberOfMonths,
-  //         ruleValue: valueSearch,
-  //         page: pageParam !== null ? pageParam : page,
-  //         take: rowPerPageParam !== null ? rowPerPageParam : rowsPerPage,
-  //       },
-  //       {
-  //         headers: {
-  //           Authorization: context.getToken(),
-  //           "router-id": "WEB#API",
-  //         },
-  //       }
-  //     );
-
-  //     if (listResponse.success) {
-  //       setGridArray(listResponse.data.list);
-
-  //       setGridCount(parseInt(listResponse.data.count));
-  //     }
-
-  //     setGridLoading(false);
-  //   } catch (error: any) {
-  //     setGridLoading(false);
-  //     setLoading(false);
-  //     setAlerMessage(error.message);
-  //     setShowAlert(true);
-  //     setTimeout(() => {
-  //       setShowAlert(false);
-  //     }, 6000);
-  //   }
-  // };
-
-  const addRuleToPlan = async (id: number, ruleName: string) => {
-    try {
-      setLoading(true);
-
-      const ruleById = await fetchApi.get(`/paymentRules/${id}`, {
-        headers: {
-          "router-id": "WEB#API",
-          Authorization: context.getToken(),
-        },
-      });
-
-      if (ruleById.success) {
-        const itemIndex = planRulesArray.findIndex((item) => item.id === id);
-        if (itemIndex > -1) {
-          setLoading(false);
-          return;
-        } else {
-          setPlanRulesArray([
-            ...planRulesArray,
-            { id: ruleById.data.id, name: ruleById.data.name },
-          ]);
-        }
-      }
-
-      setLoading(false);
-    } catch (error: any) {
-      setGridLoading(false);
-      setLoading(false);
-      setAlerMessage(error.message);
-      setShowAlert(true);
-      setTimeout(() => {
-        setShowAlert(false);
-      }, 6000);
-    }
-  };
-
-  const removeRuleFromPlan = async (item: any) => {
-    console.log(item);
-
-    const itemIndex = planRulesArray.findIndex((value) => value.id === item.id);
-    console.log("itemIndex", itemIndex);
-
-    if (itemIndex !== -1) {
-      const temp = [...planRulesArray];
-      temp.splice(itemIndex, 1);
-      setPlanRulesArray(temp);
-    } else {
-      return;
-    }
-  };
-
-  const createPlan = async () => {
+  const createOrEditPlan = async () => {
     try {
       setLoading(true);
       let apiAddress: string = "";
@@ -363,9 +297,13 @@ export default function Plans() {
         apiAddress = `/plans/new`;
       }
 
+      const filteredFeatures = systemFeaturesArray.filter(
+        (item) => item.checked === true
+      );
+
       const planObj = {
         name: name,
-        features: systemFeaturesArray,
+        features: filteredFeatures,
         active: active,
         displayOnSite: displayOnSite,
         groupId: groupId,
@@ -388,9 +326,14 @@ export default function Plans() {
         setActive(false);
         setPlanRulesArray([]);
         setPlansArray([]);
+        setGridArray([]);
 
         setLoading(false);
-        setAlerMessage("Plano criado com sucesso.");
+        setAlerMessage(
+          planId !== null
+            ? "Plano editado com sucesso."
+            : "Plano criado com sucesso."
+        );
         setShowAlert(true);
         setTimeout(() => {
           setShowAlert(false);
@@ -398,7 +341,37 @@ export default function Plans() {
         return;
       }
 
-      console.log("controllerResponse", controllerResponse);
+      setLoading(false);
+    } catch (error: any) {
+      setLoading(false);
+      console.log(error.message);
+    }
+  };
+
+  const deletePlan = async () => {
+    try {
+      setLoading(true);
+      setShowDeleteQuestion(false);
+
+      const deleteResponse = await fetchApi.del(`/plans/delete/${planId}`, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      });
+
+      if (deleteResponse.success) {
+        setLoading(false);
+        setAlerMessage(
+          deleteResponse.message
+            ? deleteResponse.message
+            : "Erro ao excluir Plano."
+        );
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 6000);
+      }
 
       setLoading(false);
     } catch (error: any) {
@@ -439,7 +412,6 @@ export default function Plans() {
               justifyContent="center"
             >
               <Grid item xs={12} sm={12} md={11} lg={11} xl={11}>
-                {JSON.stringify(nameSearch)}
                 <Typography
                   variant="h6"
                   sx={{ color: (theme) => theme.palette.secondary.light }}
@@ -523,9 +495,6 @@ export default function Plans() {
                           case "delete":
                             catchThisPlanToDelete(id);
                             break;
-                          case "insert":
-                            catchThisPlanToDelete(id);
-                            break;
                           default:
                             setGridLoading(false);
                             setLoading(false);
@@ -589,277 +558,7 @@ export default function Plans() {
             </Grid>
           </Paper>
         </Grid>
-        {/* <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Paper sx={{ p: 3 }}>
-            <Grid
-              container
-              spacing={3}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Grid item xs={12} sm={12} md={11} lg={11} xl={11}>
-                <Typography
-                  variant="h6"
-                  sx={{ color: (theme) => theme.palette.secondary.light }}
-                >
-                  Pesquisa de Regras
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={12} md={1} lg={1} xl={1}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                  }}
-                >
-                  <IconButton
-                    onClick={() => {
-                      setShowRulesSearch(!showRulesSearch);
-                    }}
-                  >
-                    {showRulesSearch ? <ExpandLess /> : <ExpandMore />}
-                  </IconButton>
-                </Box>
-              </Grid>
-              {showRulesSearch && (
-                <>
-                  <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                    <TextField
-                      variant="outlined"
-                      label="Nome da Regra"
-                      InputLabelProps={{ shrink: true }}
-                      value={ruleNameSearch}
-                      fullWidth
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ) => {
-                        setRuleNameSearch(event.target.value);
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                    <FormControl fullWidth>
-                      <InputLabel id="methodRuleId">{"Método"}</InputLabel>
-                      <Select
-                        labelId="methodRuleId"
-                        value={methodSearch}
-                        label="Método"
-                        onChange={(event: SelectChangeEvent) => {
-                          setMethodSearch(() => event.target.value);
-                        }}
-                      >
-                        <MenuItem value={0}>Selecione ...</MenuItem>
-                        {methodArray.length > 0 &&
-                          methodArray.map(
-                            (item: { id: number; name: string }) => (
-                              <MenuItem value={item.id} key={item.id}>
-                                {item.name}
-                              </MenuItem>
-                            )
-                          )}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                    <TextField
-                      InputLabelProps={{ shrink: true }}
-                      fullWidth
-                      value={numberOfMonthlyPaymentSearch}
-                      variant="outlined"
-                      label="Nº Máximo de Mensalidades"
-                      placeholder="Número de Mensalidades"
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ): void => {
-                        const { value } = event.target;
-                        if (isNaN(parseInt(value))) {
-                          setnumberOfMonthlyPaymentSearch(0);
-                        } else {
-                          setnumberOfMonthlyPaymentSearch(
-                            parseInt(event.target.value)
-                          );
-                        }
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    {parseInt(methodSearch) === 1 ||
-                    parseInt(methodSearch) === 3 ? (
-                      <>
-                        <TextField
-                          InputLabelProps={{ shrink: true }}
-                          fullWidth
-                          variant="outlined"
-                          label="Valor Máximo"
-                          value={ruleValueSearch}
-                          placeholder="Valor da Regra"
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <Icon>attach_money</Icon>
-                              </InputAdornment>
-                            ),
-                          }}
-                          onChange={(
-                            event: ChangeEvent<
-                              HTMLInputElement | HTMLTextAreaElement
-                            >
-                          ) => {
-                            const { value } = event.target;
 
-                            if (isNaN(parseInt(value))) {
-                              setRuleValueSearch("0,00");
-                            } else {
-                              setRuleValueSearch(moneyMask(value));
-                            }
-                          }}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <TextField
-                          InputLabelProps={{ shrink: true }}
-                          fullWidth
-                          variant="outlined"
-                          label="Valor Máximo"
-                          value={ruleValueSearch}
-                          placeholder="Valor da Regra"
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <Icon>percentage</Icon>
-                              </InputAdornment>
-                            ),
-                          }}
-                          onChange={(
-                            event: ChangeEvent<
-                              HTMLInputElement | HTMLTextAreaElement
-                            >
-                          ) => {
-                            const { value } = event.target;
-
-                            if (isNaN(parseInt(value))) {
-                              setRuleValueSearch("0,00");
-                            } else {
-                              setRuleValueSearch(moneyMask(value));
-                            }
-                          }}
-                        />
-                      </>
-                    )}
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<Search />}
-                      type="submit"
-                      onClick={() => {
-                        searchRules(null, null);
-                      }}
-                    >
-                      Pesquisar
-                    </Button>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <QHGrid
-                      data={gridArray}
-                      loading={gridLoading}
-                      pagination={{
-                        count: gridCount,
-                        page: page,
-                        rowsPerPage: rowsPerPage,
-                        rowsPerPageOptions: [5, 10, 20, 40, 50, 100],
-                        onRowsPerPageChange(rowsPerPAge) {
-                          setRowsPerPage(rowsPerPAge);
-                          searchRules(null, rowsPerPAge);
-                        },
-                        onPageChange(page) {
-                          setPage(page);
-                          searchRules(page, null);
-                        },
-                      }}
-                      hasActions
-                      actionTrigger={(id: number, ruleName: string) => {
-                        console.log(ruleName);
-                        switch (ruleName) {
-                          case "insert":
-                            addRuleToPlan(id, ruleName);
-                            break;
-                          case "delete":
-                            // catchThisRuleToDelete(id);
-                            break;
-                          default:
-                            setGridLoading(false);
-                            setLoading(false);
-                            setAlerMessage("Erro, ação não identificada");
-                            setShowAlert(true);
-                            setTimeout(() => {
-                              setShowAlert(false);
-                            }, 6000);
-                            break;
-                        }
-                      }}
-                      actions={[
-                        {
-                          icon: <Add />,
-                          name: "insert",
-                          text: "Inserir no Plano",
-                        },
-                        // {
-                        //   icon: <Delete />,
-                        //   name: "delete",
-                        //   text: "Excluir",
-                        // },
-                      ]}
-                      headers={[
-                        {
-                          text: "Nome",
-                          attrName: "name",
-                          width: 4,
-                        },
-                        {
-                          text: "Método",
-                          attrName: "methodName",
-                          width: 3,
-                          align: "center",
-                        },
-                        {
-                          text: "Nº de Mensalidades",
-                          attrName: "numberOfMontlyPayment",
-                          width: 3,
-                          align: "center",
-                        },
-                        {
-                          text: "Valor",
-                          attrName: "ruleValue",
-                          width: 2,
-                          align: "center",
-                        },
-                        {
-                          text: "Ativo",
-                          attrName: "active",
-                          width: 2,
-                          align: "center",
-                          custom: {
-                            isIcon: true,
-                            color: "color",
-                          },
-                        },
-                      ]}
-                    />
-                  </Grid>
-                </>
-              )}
-            </Grid>
-          </Paper>
-        </Grid> */}
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
             <Grid
@@ -1071,7 +770,7 @@ export default function Plans() {
                   startIcon={<Save />}
                   type="submit"
                   onClick={() => {
-                    createPlan();
+                    createOrEditPlan();
                   }}
                 >
                   {planId !== null ? "Editar Plano" : "Criar Plano"}
@@ -1081,6 +780,40 @@ export default function Plans() {
           </Paper>
         </Grid>
       </Grid>
+      <Dialog
+        open={showDeleteQuestion}
+        onClose={() => {
+          setShowDeleteQuestion(false);
+        }}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Confirmação de exclusão de Plano.
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Tem certeza que deseja excluir o plano: &quot;{name}&quot; ?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowDeleteQuestion(false);
+            }}
+          >
+            cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              deletePlan();
+            }}
+            autoFocus
+          >
+            Confirmar Exclusão.
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ViewWrapper>
   );
 }
