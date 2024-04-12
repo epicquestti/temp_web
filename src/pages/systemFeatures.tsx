@@ -104,8 +104,6 @@ export default function SystemFeatures() {
         }
       );
 
-      console.log("controllerResponse", controllerResponse);
-
       if (controllerResponse.success) {
         setLoading(false);
         setName("");
@@ -245,7 +243,6 @@ export default function SystemFeatures() {
         }
       );
 
-      console.log("deleteResponse", deleteResponse);
       if (deleteResponse.success) {
         setLoading(false);
         setAlerMessage(
@@ -375,7 +372,6 @@ export default function SystemFeatures() {
                       }}
                       hasActions
                       actionTrigger={(id: number, ruleName: string) => {
-                        console.log(ruleName);
                         switch (ruleName) {
                           case "edit":
                             catchThisFeatureToEdit(id);

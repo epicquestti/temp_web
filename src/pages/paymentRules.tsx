@@ -150,10 +150,8 @@ export default function PaymentRules() {
       };
       let apiAddress: string = "";
       if (ruleId !== null) {
-        console.log("Editando...");
         //Enviar para Editar
         apiAddress = `/paymentRules/update/${ruleId}`;
-        console.log("apiAddress", apiAddress);
         setLoading(false);
       } else {
         apiAddress = "/paymentRules/new";
@@ -338,7 +336,6 @@ export default function PaymentRules() {
         }
       );
 
-      console.log("deleteResponse", deleteResponse);
       if (deleteResponse.success) {
         setLoading(false);
         setAlerMessage(
@@ -580,7 +577,6 @@ export default function PaymentRules() {
                       }}
                       hasActions
                       actionTrigger={(id: number, ruleName: string) => {
-                        console.log(ruleName);
                         switch (ruleName) {
                           case "edit":
                             catchThisRuleToEdit(id);

@@ -4,7 +4,6 @@ import { useApplicationContext } from "@/context/ApplicationContext";
 import fetchApi from "@/lib/fetchApi";
 import { moneyMask } from "@/lib/masks";
 import {
-  Add,
   Delete,
   Edit,
   ExpandLess,
@@ -63,15 +62,6 @@ export default function Plans() {
   const [active, setActive] = useState<boolean>(false);
 
   const [nameSearch, setNameSearch] = useState<string>("");
-  const [ruleNameSearch, setRuleNameSearch] = useState<string>("");
-  const [methodSearch, setMethodSearch] = useState<string>("");
-  const [numberOfMonthlyPaymentSearch, setnumberOfMonthlyPaymentSearch] =
-    useState<number>(0);
-  const [ruleValueSearch, setRuleValueSearch] = useState<string>("");
-
-  const [methodArray, setMethodArray] = useState<
-    { id: number; name: string }[]
-  >([]);
 
   const [gridArray, setGridArray] = useState<
     {
@@ -82,29 +72,6 @@ export default function Plans() {
   >([]);
   const [gridLoading, setGridLoading] = useState<boolean>(false);
   const [gridCount, setGridCount] = useState<number>(0);
-  const [actions, setActions] = useState<
-    {
-      icon: JSX.Element;
-      name: string;
-      text: string;
-    }[]
-  >([
-    {
-      icon: <Edit />,
-      name: "edit",
-      text: "Editar",
-    },
-    {
-      icon: <Delete />,
-      name: "delete",
-      text: "Excluir",
-    },
-    {
-      icon: <Add />,
-      name: "inserir",
-      text: "Inserir",
-    },
-  ]);
 
   const [rowsPerPage, setRowsPerPage] = useState<number>(5);
   const [page, setPage] = useState<number>(0);

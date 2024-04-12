@@ -49,7 +49,6 @@ export default function SecurityGroup() {
   });
 
   function onSubmitFunction(data: userProfileForm) {
-    console.log(data);
     return false;
   }
 

@@ -144,8 +144,6 @@ export default function SecurityGroup() {
         },
       });
 
-      console.log("groupById", groupById);
-
       if (groupById.success) {
         setGroupId(groupById.data.group.id);
         setGroupName(groupById.data.group.name);
