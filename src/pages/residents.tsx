@@ -41,6 +41,8 @@ export default function Residents() {
   const [residentName, setResidentName] = useState<string>("");
   const [residentCPF, setResidentCPF] = useState<string>("");
   const [residentRG, setResidentRG] = useState<string>("");
+  const [residentHomeNumber, setResidentHomeNumber] = useState<string>("");
+  const [residentHomeBlock, setResidentHomeBlock] = useState<string>("");
   const [residentEmail, setResidentEmail] = useState<string>("");
   const [residentPhone, setResidentPhone] = useState<string>("");
   const [isPropertyOwner, setIsPropertyOwner] = useState<boolean>(false);
@@ -123,6 +125,8 @@ export default function Residents() {
         isEmployee: isEmployee,
         condominiumId: 1,
         email: residentEmail,
+        homeNumber: residentHomeNumber,
+        homeBlock: residentHomeBlock,
       };
 
       const controllerResponse = await fetchApi.post(apiAddress, residentObj, {
@@ -138,6 +142,8 @@ export default function Residents() {
         setResidentRG("");
         setResidentPhone("");
         setResidentEmail("");
+        setResidentHomeNumber("");
+        setResidentHomeBlock("");
         setIsEmployee(false);
         setIsPropertyOwner(false);
 
@@ -228,6 +234,8 @@ export default function Residents() {
         setResidentRG(residentById.data.rg);
         setIsEmployee(residentById.data.isEmployee);
         setIsPropertyOwner(residentById.data.isPropertyOwner);
+        setResidentHomeNumber(residentById.data.homeNumber);
+        setResidentHomeBlock(residentById.data.homeBlock);
       }
 
       setLoading(false);
@@ -269,8 +277,6 @@ export default function Residents() {
     try {
       setLoading(true);
       setShowDeleteQuestion(false);
-      const aa = `/residents/delete/${residentId}/${condominiumId}`;
-      console.log(aa);
 
       const deleteResponse = await fetchApi.del(
         `/residents/delete/${residentId}/${condominiumId}`,
@@ -290,6 +296,8 @@ export default function Residents() {
         setResidentRG("");
         setResidentPhone("");
         setResidentEmail("");
+        setResidentHomeNumber("");
+        setResidentHomeBlock("");
         setIsEmployee(false);
         setIsPropertyOwner(false);
         setResidentsGridArray([]);
@@ -585,7 +593,7 @@ export default function Residents() {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+              <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
                 <TextField
                   variant="outlined"
                   label="E-Mail do Residente"
@@ -600,7 +608,37 @@ export default function Residents() {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
+              <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                <TextField
+                  variant="outlined"
+                  label="Nº Casa/Apto"
+                  inputProps={{ maxLength: 15 }}
+                  InputLabelProps={{ shrink: true }}
+                  value={residentHomeNumber}
+                  fullWidth
+                  onChange={(
+                    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+                  ) => {
+                    setResidentHomeNumber(event.target.value);
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                <TextField
+                  variant="outlined"
+                  label="Bloco"
+                  inputProps={{ maxLength: 15 }}
+                  InputLabelProps={{ shrink: true }}
+                  value={residentHomeBlock}
+                  fullWidth
+                  onChange={(
+                    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+                  ) => {
+                    setResidentHomeBlock(event.target.value);
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -616,7 +654,7 @@ export default function Residents() {
                   label="Proprietário do Imóvel?"
                 />
               </Grid>
-              <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
+              <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
                 <FormControlLabel
                   control={
                     <Checkbox
