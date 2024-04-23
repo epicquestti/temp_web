@@ -2,14 +2,11 @@ import QHGrid from "@/components/DataGridV2";
 import ViewWrapper from "@/components/ViewWrapper";
 import { useApplicationContext } from "@/context/ApplicationContext";
 import fetchApi from "@/lib/fetchApi";
+import { cepMask, cnpjMask, noSpecialCharactersMask } from "@/lib/masks";
 import {
-  cepMask,
-  cnpjMask,
-  noSpecialCharactersMask,
-  numbersOnlyMask,
-} from "@/lib/masks";
-import {
+  Add,
   Delete,
+  DeleteForever,
   Edit,
   ExpandLess,
   ExpandMore,
@@ -24,6 +21,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Fab,
   FormControl,
   Grid,
   IconButton,
@@ -33,6 +31,7 @@ import {
   Select,
   SelectChangeEvent,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -77,12 +76,15 @@ export default function Condominium() {
   const [addressCEP, setAddressCEP] = useState<string>("");
   const [addressCity, setAddressCity] = useState<string>("");
   const [cityIbge, setCityIbge] = useState<number>(0);
-  const [numberOfHomes, setNumberOfHomes] = useState<string>("");
-  const [numberOfBlocks, setNumberOfBlocks] = useState<string>("");
   const [selectedState, setSelectedState] = useState<string>("0");
 
   const [condoNameSearch, setCondoNameSearch] = useState<string>("");
   const [condoCNPJSearch, setCondoCNPJSearch] = useState<string>("");
+
+  const [showBlocks, setShowBlocks] = useState<boolean>(false);
+  const [showBlockModal, setShowBlockModal] = useState<boolean>(false);
+  const [blockName, setBlockName] = useState<string>("");
+  const [blocksArray, setBlocksArray] = useState<{ name: string }[]>([]);
 
   const initialSetup = async () => {
     const statesResponse = await fetchApi.get("/global/tools/get-all-states", {
@@ -120,8 +122,6 @@ export default function Condominium() {
     } else {
       setCityIbge(0);
     }
-
-    console.log(cepResponse);
   };
 
   const validateAndAlert = (condition: boolean, message: string): boolean => {
@@ -185,6 +185,8 @@ export default function Condominium() {
         apiAddress = "/condominium/new";
       }
 
+      const parsedBlocks: string[] = blocksArray.map((item) => item.name);
+
       const condominiumObj = {
         address: condoAddress,
         addressNumber: addressNumber,
@@ -194,8 +196,7 @@ export default function Condominium() {
         complement: addressComplement,
         name: condoName,
         neighborhood: addressNeighborhood,
-        numberOfBlocks: parseInt(numberOfBlocks),
-        numberOfHomes: parseInt(numberOfHomes),
+        blocks: parsedBlocks,
       };
 
       const controllerResponse = await fetchApi.post(
@@ -231,10 +232,9 @@ export default function Condominium() {
         setAddressCity("");
         setCityIbge(0);
         setSelectedState("0");
-        setNumberOfBlocks("");
-        setNumberOfHomes("");
         setCondoGridArray([]);
         setCondoGridCount(0);
+        setBlocksArray([]);
       }
 
       setLoading(false);
@@ -293,7 +293,7 @@ export default function Condominium() {
       });
 
       if (condoById.success) {
-        const condo = condoById.data;
+        const condo = condoById.data.condo;
         setCondoName(condo.name);
         setCondoCNPJ(cnpjMask(condo.cnpj));
         setCondoAddress(condo.address.street);
@@ -302,11 +302,23 @@ export default function Condominium() {
         setAddressComplement(condo.address.complement);
         setAddressCEP(cepMask(condo.address.cep));
         setCityIbge(condo.address.cityIbge);
-        setNumberOfBlocks(condo.numberOfBlocks ? condo.numberOfBlocks : "");
-        setNumberOfHomes(condo.numberOfHomes ? condo.numberOfHomes : "");
         setAddressCity(condo.address.city.name);
         setSelectedState(condo.address.city.state.ibge.toString());
         setAddressId(condo.address.id);
+
+        const blocksByCondoId = await fetchApi.get(
+          `/blocks/get-blocks/${condoById.data.condo.id}`,
+          {
+            headers: {
+              "router-id": "WEB#API",
+              Authorization: context.getToken(),
+            },
+          }
+        );
+
+        if (blocksByCondoId.success && blocksByCondoId.data) {
+          setBlocksArray(blocksByCondoId.data);
+        }
       }
 
       setLoading(false);
@@ -368,8 +380,6 @@ export default function Condominium() {
         setAddressCity("");
         setCityIbge(0);
         setSelectedState("0");
-        setNumberOfBlocks("");
-        setNumberOfHomes("");
         setCondominiumId(null);
         setCondoGridCount(0);
         setCondoGridArray([]);
@@ -387,6 +397,38 @@ export default function Condominium() {
 
       setLoading(false);
     }
+  };
+
+  const addBlock = async () => {
+    try {
+      const duplicateName = blocksArray.filter(
+        (value) => value.name.toUpperCase() === blockName.toUpperCase()
+      );
+
+      if (duplicateName.length > 0) {
+        setShowAlert(true);
+        setShowBlockModal(false);
+        setBlockName("");
+        setAlertMessage("Nome do bloco já cadastrado neste condomínio.");
+        return;
+      }
+
+      setShowBlockModal(false);
+      let temp = [...blocksArray];
+      temp.push({ name: blockName });
+      setBlocksArray(temp);
+      setBlockName("");
+      return;
+    } catch (error: any) {
+      console.log(error.message);
+      return;
+    }
+  };
+
+  const deleteBlock = (index: number) => {
+    let temp = [...blocksArray];
+    temp.splice(index, 1);
+    setBlocksArray(temp);
   };
 
   return (
@@ -414,6 +456,7 @@ export default function Condominium() {
       <Grid container spacing={2}>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
+            {JSON.stringify(blocksArray)}
             <Grid
               container
               spacing={3}
@@ -721,7 +764,7 @@ export default function Condominium() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+              {/* <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                 <TextField
                   variant="outlined"
                   label="Número de Moradias"
@@ -748,7 +791,62 @@ export default function Condominium() {
                     setNumberOfBlocks(numbersOnlyMask(event.target.value));
                   }}
                 />
+              </Grid> */}
+              <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
+                <Typography
+                  variant="h6"
+                  sx={{ color: (theme) => theme.palette.secondary.light }}
+                >
+                  Blocos
+                </Typography>
               </Grid>
+              <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                <Tooltip title="Adicionar Bloco">
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Fab
+                      color="primary"
+                      aria-label="add"
+                      onClick={() => setShowBlockModal(true)}
+                    >
+                      <Add />
+                    </Fab>
+                  </Box>
+                </Tooltip>
+              </Grid>
+              {blocksArray.length > 0 &&
+                blocksArray.map((item: any, index) => (
+                  <>
+                    <Grid
+                      item
+                      xs={12}
+                      sm={12}
+                      md={10}
+                      lg={10}
+                      xl={10}
+                      key={index}
+                    >
+                      <Typography>
+                        <b>{item.name}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={2} sm={2} md={2} lg={2} xl={2}>
+                      <Button
+                        sx={{ color: "red" }}
+                        onClick={() => {
+                          deleteBlock(index);
+                        }}
+                        startIcon={<DeleteForever />}
+                      ></Button>
+                    </Grid>
+                  </>
+                ))}
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                 <Button
                   fullWidth
@@ -800,6 +898,48 @@ export default function Condominium() {
             autoFocus
           >
             Confirmar Exclusão.
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={showBlockModal}
+        onClose={() => {
+          setShowBlockModal(false);
+        }}
+      >
+        <DialogTitle id="alert-dialog-title">
+          Adicionar Bloco ao Condomínio
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            variant="outlined"
+            label="Nome do Bloco"
+            InputLabelProps={{ shrink: true }}
+            value={blockName}
+            fullWidth
+            onChange={(
+              event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+            ) => {
+              setBlockName(event.target.value);
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowBlockModal(false);
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              addBlock();
+            }}
+            variant="contained"
+            autoFocus
+          >
+            Adicionar Bloco
           </Button>
         </DialogActions>
       </Dialog>

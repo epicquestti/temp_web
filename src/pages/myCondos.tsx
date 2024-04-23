@@ -1,4 +1,5 @@
 import ViewWrapper from "@/components/ViewWrapper";
+import fetchApi from "@/lib/fetchApi";
 import { CopyAll, Home } from "@mui/icons-material";
 import {
   Box,
@@ -15,13 +16,25 @@ import {
   Typography,
 } from "@mui/material";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function MyCondos() {
   const [loading, setLoading] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [showSubscription, setShowSubscription] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
+
+  const initialSetup = async () => {
+    try {
+      const controllerResponse = await fetchApi.get(``);
+    } catch (error: any) {
+      console.log(error.message);
+    }
+  };
+
+  useEffect(() => {
+    initialSetup();
+  }, []);
 
   const condosArray: any[] = [
     {
