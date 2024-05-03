@@ -1,4 +1,5 @@
 import ViewWrapper from "@/components/ViewWrapper";
+import { useApplicationContext } from "@/context/ApplicationContext";
 import fetchApi from "@/lib/fetchApi";
 import { CopyAll, Home } from "@mui/icons-material";
 import {
@@ -24,9 +25,27 @@ export default function MyCondos() {
   const [showSubscription, setShowSubscription] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
 
+  const [condosArray, setCondosArray] = useState<any[]>([]);
+
+  const context = useApplicationContext();
+
   const initialSetup = async () => {
     try {
-      const controllerResponse = await fetchApi.get(``);
+      const controllerResponse = await fetchApi.get(
+        `/contractor/get-condos/1`,
+        {
+          headers: {
+            Authorization: context.getToken(),
+            "router-id": "WEB#API",
+          },
+        }
+      );
+
+      if (controllerResponse.data && controllerResponse.data.length > 0) {
+        setCondosArray(controllerResponse.data);
+      }
+
+      console.log("controllerResponse", controllerResponse);
     } catch (error: any) {
       console.log(error.message);
     }
@@ -34,42 +53,8 @@ export default function MyCondos() {
 
   useEffect(() => {
     initialSetup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const condosArray: any[] = [
-    {
-      id: "1",
-      name: "Condomínio 1",
-      address: "Avenida Brasil",
-      addressNumber: "110",
-      city: "Franca",
-      state: "SP",
-    },
-    {
-      id: "2",
-      name: "Condomínio 2",
-      address: "Avenida Brasil",
-      addressNumber: "110",
-      city: "Franca",
-      state: "SP",
-    },
-    {
-      id: "3",
-      name: "Condomínio 3",
-      address: "Avenida Brasil",
-      addressNumber: "110",
-      city: "Franca",
-      state: "SP",
-    },
-    {
-      id: "4",
-      name: "Condomínio 4",
-      address: "Avenida Brasil",
-      addressNumber: "110",
-      city: "Franca",
-      state: "SP",
-    },
-  ];
 
   const keys: any[] = [
     {
@@ -176,7 +161,7 @@ export default function MyCondos() {
                             {item.name}
                           </Typography>
                           <Typography sx={{ fontWeight: "bold" }}>
-                            {item.address}, {item.addressNumber} {item.city}-
+                            {item.street}, {item.streetNumber} - {item.city}-
                             {item.state}
                           </Typography>
                         </Box>

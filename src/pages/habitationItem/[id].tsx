@@ -11,33 +11,21 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-export default function BlockItem() {
+export default function HabitationItem() {
   const [loading, setLoading] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [allowEditing, setAllowEditing] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
-
-  const [block, setBlock] = useState<{ id: string; name: string }>({
-    id: "",
-    name: "",
-  });
-  const [habitationsArray, setHabitationsArray] = useState<
-    {
-      id: string;
-      nameOrNumber: string;
-    }[]
-  >([]);
 
   const router = useRouter();
   const id = router.query.id;
   const context = useApplicationContext();
 
   const initialSetup = async () => {
-    const controllerResponse = await fetchApi.get(`/blocks/${id}`, {
+    const controllerResponse = await fetchApi.get(`/habitations/${id}`, {
       headers: {
         "router-id": "WEB#API",
         Authorization: context.getToken(),
@@ -45,8 +33,6 @@ export default function BlockItem() {
     });
 
     if (controllerResponse.success) {
-      setBlock(controllerResponse.data.block);
-      setHabitationsArray(controllerResponse.data.habitations);
     }
 
     console.log("controllerResponse", controllerResponse);
@@ -54,6 +40,7 @@ export default function BlockItem() {
 
   useEffect(() => {
     initialSetup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -74,6 +61,11 @@ export default function BlockItem() {
           iconName: "apartment",
           href: "/blocks",
         },
+        {
+          text: "Habitações",
+          iconName: "home",
+          href: "/habitations",
+        },
       ]}
       loading={loading}
       alerMessage={alertMessage}
@@ -81,7 +73,7 @@ export default function BlockItem() {
       closeAlert={() => {
         setShowAlert(false);
       }}
-      title="Blocos"
+      title="Habitações"
     >
       <Grid container spacing={2}>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
@@ -101,7 +93,7 @@ export default function BlockItem() {
                     alignItems: "center",
                   }}
                 >
-                  <Typography variant="h4">Dados do Bloco</Typography>
+                  <Typography variant="h4">Dados da Habitação</Typography>
                 </Box>
               </Grid>
               <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
@@ -143,10 +135,10 @@ export default function BlockItem() {
                   justifyContent="center"
                 >
                   <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
-                    <Typography variant="h4">Habitações do Bloco</Typography>
+                    <Typography variant="h4">Moradores da Habitação</Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
-                    <Tooltip title="Adicionar Habitação">
+                    <Tooltip title="Adicionar Morador">
                       <Box
                         sx={{
                           width: "100%",
@@ -162,7 +154,7 @@ export default function BlockItem() {
                     </Tooltip>
                   </Grid>
                 </Grid>
-                {habitationsArray.length > 0 &&
+                {/* {habitationsArray.length > 0 &&
                   habitationsArray.map((item, index) => (
                     <Grid
                       item
@@ -197,7 +189,7 @@ export default function BlockItem() {
                         </Link>
                       </Tooltip>
                     </Grid>
-                  ))}
+                  ))} */}
               </Grid>
             </Grid>
           </Paper>

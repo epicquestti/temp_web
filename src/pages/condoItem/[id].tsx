@@ -21,31 +21,47 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
+type condoType = {
+  id: string;
+  name: string;
+  cnpj?: string;
+  street: string;
+  streetNumber: string;
+  neighborhood: string;
+  complement?: string;
+  cep: string;
+  city: string;
+  state: string;
+  stateName: string;
+};
+
+type blockType = {
+  condominiumId: string;
+  id: string;
+  name: string;
+};
+
 export default function CondoItem() {
   const router = useRouter();
   const context = useApplicationContext();
   const condoId = router.query.id;
   const [allowEditing, setAllowEditing] = useState<boolean>(false);
 
-  const [condoName, setCondoName] = useState<string>(
-    "Condomínio Morada do Sol"
-  );
-  const [condoCNPJ, setCondoCNPJ] = useState<string>("02134234123123");
-  const [condoNumberOfHabitations, setCondoNumberOfHabitations] =
-    useState<string>("4");
-  const [condoNumberOfBlocks, setCondoNumberOfBlocks] = useState<string>("4");
+  const [condoItem, setCondoItem] = useState<condoType>({
+    id: "",
+    name: "",
+    cnpj: "",
+    street: "",
+    streetNumber: "",
+    neighborhood: "",
+    complement: "",
+    cep: "",
+    city: "",
+    state: "",
+    stateName: "",
+  });
 
-  const [condoAddress, setCondoAddress] = useState<string>("Rua Doutor A");
-
-  const [addressNeighborhood, setAddressNeighborhood] =
-    useState<string>("Vila Nova");
-  const [addressNumber, setAddressNumber] = useState<string>("1180");
-  const [addressComplement, setAddressComplement] = useState<string>(
-    "Complemento do endereço"
-  );
-  const [addressCep, setAddressCep] = useState<string>("14400005");
-  const [addressCity, setAddressCity] = useState<string>("Franca");
-  const [addressState, setAddressState] = useState<string>("SP");
+  const [blocksArray, setBlocksArray] = useState<blockType[]>([]);
 
   const initialSetup = async () => {
     const controllerResponse = await fetchApi.get(`/condominium/${condoId}`, {
@@ -54,52 +70,20 @@ export default function CondoItem() {
         Authorization: context.getToken(),
       },
     });
-
     console.log("controllerResponse", controllerResponse);
+
+    if (controllerResponse.success) {
+      setCondoItem(controllerResponse.data.condo);
+      if (controllerResponse.data.blocks.length > 0) {
+        setBlocksArray(controllerResponse.data.blocks);
+      }
+    }
   };
 
   useEffect(() => {
     initialSetup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const name = "Nome do Condomínio ";
-
-  const blocos: any[] = [
-    {
-      id: "1",
-      name: "1",
-      habitations: [
-        {
-          id: "1",
-          name: "11",
-        },
-      ],
-    },
-    {
-      id: "2",
-      name: "2",
-      habitations: [
-        {
-          id: "1",
-          name: "11",
-        },
-        {
-          id: "2",
-          name: "22",
-        },
-      ],
-    },
-    {
-      id: "3",
-      name: "3",
-      habitations: [
-        {
-          id: "1",
-          name: "11",
-        },
-      ],
-    },
-  ];
 
   return (
     <ViewWrapper>
@@ -125,6 +109,7 @@ export default function CondoItem() {
                 </Box>
               </Grid>
               <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                {JSON.stringify(condoItem)}
                 <Box
                   sx={{
                     width: "100%",
@@ -151,7 +136,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Nome do Condomínio"
                       InputLabelProps={{ shrink: true }}
-                      value={name}
+                      value={condoItem.name}
                       // disabled={allowEditing}
                       inputProps={{ readOnly: !allowEditing }}
                       fullWidth
@@ -167,7 +152,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="CNPJ do Condomínio"
                       InputLabelProps={{ shrink: true }}
-                      // value={condoCNPJ}
+                      value={condoItem.cnpj}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       // onChange={(
@@ -182,7 +167,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Endereço"
                       InputLabelProps={{ shrink: true }}
-                      // value={condoAddress}
+                      value={condoItem.street}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       // onChange={(
@@ -197,7 +182,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Bairro"
                       InputLabelProps={{ shrink: true }}
-                      // value={addressNeighborhood}
+                      value={condoItem.neighborhood}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       // onChange={(
@@ -212,7 +197,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Número"
                       InputLabelProps={{ shrink: true }}
-                      // value={addressNumber}
+                      value={condoItem.streetNumber}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       // onChange={(
@@ -227,7 +212,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Complemento"
                       InputLabelProps={{ shrink: true }}
-                      // value={addressComplement}
+                      value={condoItem.complement}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       // onChange={(
@@ -242,7 +227,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="CEP"
                       InputLabelProps={{ shrink: true }}
-                      // value={addressCEP}
+                      value={condoItem.cep}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       // onChange={(
@@ -258,7 +243,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Cidade"
                       InputLabelProps={{ shrink: true }}
-                      // value={addressCity}
+                      value={condoItem.city}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       // onChange={(
@@ -275,7 +260,7 @@ export default function CondoItem() {
                         labelId="stateId"
                         label="Estado"
                         inputProps={{ readOnly: !allowEditing }}
-                        // value={selectedState}
+                        // value={condoItem.stateIbge}
                         // onChange={(event: SelectChangeEvent) => {
                         //   setSelectedState(() => event.target.value);
                         // }}
@@ -296,36 +281,7 @@ export default function CondoItem() {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <TextField
-                      variant="outlined"
-                      label="Número de Moradias"
-                      InputLabelProps={{ shrink: true }}
-                      // value={numberOfHomes}
-                      fullWidth
-                      inputProps={{ readOnly: !allowEditing }}
-                      // onChange={(
-                      //   event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-                      // ) => {
-                      //   setNumberOfHomes(numbersOnlyMask(event.target.value));
-                      // }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <TextField
-                      variant="outlined"
-                      label="Número de Blocos"
-                      InputLabelProps={{ shrink: true }}
-                      // value={numberOfBlocks}
-                      fullWidth
-                      inputProps={{ readOnly: !allowEditing }}
-                      // onChange={(
-                      //   event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-                      // ) => {
-                      //   setNumberOfBlocks(numbersOnlyMask(event.target.value));
-                      // }}
-                    />
-                  </Grid>
+
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <Button
                       fullWidth
@@ -348,57 +304,48 @@ export default function CondoItem() {
                 <>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Nome: <b>{condoName}</b>
+                      Nome: <b>{condoItem.name}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      CNPJ: <b>{cnpjMask(condoCNPJ)}</b>
+                      CNPJ:{" "}
+                      <b>{condoItem.cnpj ? cnpjMask(condoItem.cnpj) : ""}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Endereço: <b>{condoAddress}</b>
+                      Endereço: <b>{condoItem.street}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Bairro: <b>{addressNeighborhood}</b>
+                      Bairro: <b>{condoItem.neighborhood}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
                     <Typography>
-                      Número: <b>{addressNumber}</b>
+                      Número: <b>{condoItem.streetNumber}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Complemento: <b>{addressComplement}</b>
+                      Complemento: <b>{condoItem.complement}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
                     <Typography>
-                      CEP: <b>{cepMask(addressCep)}</b>
+                      CEP: <b>{condoItem.cep ? cepMask(condoItem.cep) : ""}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
                     <Typography>
-                      Cidade: <b>{addressCity}</b>
+                      Cidade: <b>{condoItem.city}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
                     <Typography>
-                      Estado: <b>{addressState}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
-                    <Typography>
-                      Número de Blocos: <b>{condoNumberOfBlocks}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={3} lg={3} xl={3}>
-                    <Typography>
-                      Número de Moradias: <b>{condoNumberOfHabitations}</b>
+                      Estado: <b>{condoItem.state}</b>
                     </Typography>
                   </Grid>
                 </>
@@ -425,7 +372,7 @@ export default function CondoItem() {
                     <Typography variant="h4">Blocos</Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
-                    <Tooltip title="Adicionar Habitação">
+                    <Tooltip title="Adicionar Bloco">
                       <Box
                         sx={{
                           width: "100%",
@@ -441,8 +388,8 @@ export default function CondoItem() {
                     </Tooltip>
                   </Grid>
                 </Grid>
-                {blocos.length > 0 &&
-                  blocos.map((item, index) => (
+                {blocksArray.length > 0 &&
+                  blocksArray.map((item, index) => (
                     <Grid
                       item
                       xs={12}
@@ -472,16 +419,16 @@ export default function CondoItem() {
                             <Typography>
                               Nome: <b>{item.name}</b>
                             </Typography>
-                            <Typography>
+                            {/* <Typography>
                               <b>Habitações: </b>
-                            </Typography>
-                            {item.habitations &&
+                            </Typography> */}
+                            {/* {item.habitations &&
                               item.habitations.length > 0 &&
                               item.habitations.map((item: any, index: any) => (
                                 <Typography key={index}>
                                   Apartamento/Casa: <b>{item.name}</b>
                                 </Typography>
-                              ))}
+                              ))} */}
                           </Box>
                         </Link>
                       </Tooltip>
