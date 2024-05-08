@@ -6,6 +6,10 @@ import { Add, Edit, Save } from "@mui/icons-material";
 import {
   Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Fab,
   FormControl,
   Grid,
@@ -19,7 +23,7 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 
 type condoType = {
   id: string;
@@ -46,6 +50,12 @@ export default function CondoItem() {
   const context = useApplicationContext();
   const condoId = router.query.id;
   const [allowEditing, setAllowEditing] = useState<boolean>(false);
+  const [showBlockModal, setShowBlockModal] = useState<boolean>(false);
+
+  const [showAlert, setShowAlert] = useState<boolean>(false);
+  const [alertMessage, setAlertMessage] = useState<string>("");
+
+  const [blockName, setBlockName] = useState<string>("");
 
   const [condoItem, setCondoItem] = useState<condoType>({
     id: "",
@@ -85,8 +95,52 @@ export default function CondoItem() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const addBlock = async () => {
+    try {
+      const duplicateName = blocksArray.filter(
+        (value) => value.name.toUpperCase() === blockName.toUpperCase()
+      );
+
+      if (duplicateName.length > 0) {
+        setShowAlert(true);
+        setShowBlockModal(false);
+        setBlockName("");
+        setAlertMessage("Nome do bloco já cadastrado neste condomínio.");
+        return;
+      }
+
+      setShowBlockModal(false);
+      let temp = [...blocksArray];
+      temp.push({ condominiumId: "", id: "", name: blockName });
+      setBlocksArray(temp);
+      setBlockName("");
+      return;
+    } catch (error: any) {
+      console.log(error.message);
+      return;
+    }
+  };
+
   return (
-    <ViewWrapper>
+    <ViewWrapper
+      locals={[
+        {
+          text: "Início",
+          iconName: "home",
+          href: "/",
+        },
+        {
+          text: "Meus Condomínios",
+          iconName: "home_work",
+          href: "/myCondos",
+        },
+        {
+          text: `${condoItem.name}`,
+          iconName: "home",
+          href: `/condoItem/${condoItem.name}`,
+        },
+      ]}
+    >
       <Grid container spacing={2}>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
@@ -109,7 +163,6 @@ export default function CondoItem() {
                 </Box>
               </Grid>
               <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                {JSON.stringify(condoItem)}
                 <Box
                   sx={{
                     width: "100%",
@@ -381,7 +434,11 @@ export default function CondoItem() {
                           alignItems: "center",
                         }}
                       >
-                        <Fab color="primary" aria-label="add">
+                        <Fab
+                          color="primary"
+                          aria-label="add"
+                          onClick={() => setShowBlockModal(true)}
+                        >
                           <Add />
                         </Fab>
                       </Box>
@@ -419,16 +476,6 @@ export default function CondoItem() {
                             <Typography>
                               Nome: <b>{item.name}</b>
                             </Typography>
-                            {/* <Typography>
-                              <b>Habitações: </b>
-                            </Typography> */}
-                            {/* {item.habitations &&
-                              item.habitations.length > 0 &&
-                              item.habitations.map((item: any, index: any) => (
-                                <Typography key={index}>
-                                  Apartamento/Casa: <b>{item.name}</b>
-                                </Typography>
-                              ))} */}
                           </Box>
                         </Link>
                       </Tooltip>
@@ -439,6 +486,48 @@ export default function CondoItem() {
           </Paper>
         </Grid>
       </Grid>
+      <Dialog
+        open={showBlockModal}
+        onClose={() => {
+          setShowBlockModal(false);
+        }}
+      >
+        <DialogTitle id="alert-dialog-title">
+          Adicionar Bloco ao Condomínio
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            variant="outlined"
+            label="Nome do Bloco"
+            InputLabelProps={{ shrink: true }}
+            value={blockName}
+            fullWidth
+            onChange={(
+              event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+            ) => {
+              setBlockName(event.target.value);
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowBlockModal(false);
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              addBlock();
+            }}
+            variant="contained"
+            autoFocus
+          >
+            Adicionar Bloco
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ViewWrapper>
   );
 }

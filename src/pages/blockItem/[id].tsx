@@ -34,6 +34,7 @@ export default function BlockItem() {
 
   const router = useRouter();
   const id = router.query.id;
+  const { name } = router.query;
   const context = useApplicationContext();
 
   const initialSetup = async () => {
@@ -54,6 +55,7 @@ export default function BlockItem() {
 
   useEffect(() => {
     initialSetup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -65,14 +67,19 @@ export default function BlockItem() {
           href: "/",
         },
         {
-          text: "Condomínios",
+          text: "Meus Condomínios",
           iconName: "home_work",
-          href: "/condominium",
+          href: "/myCondos",
         },
         {
-          text: "Blocos",
+          text: `${name}`,
+          iconName: "home",
+          href: `/condoItem/${name}`,
+        },
+        {
+          text: `${block.name}`,
           iconName: "apartment",
-          href: "/blocks",
+          href: `/condoItem/${block.name}`,
         },
       ]}
       loading={loading}

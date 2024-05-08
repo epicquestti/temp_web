@@ -399,32 +399,6 @@ export default function Condominium() {
     }
   };
 
-  const addBlock = async () => {
-    try {
-      const duplicateName = blocksArray.filter(
-        (value) => value.name.toUpperCase() === blockName.toUpperCase()
-      );
-
-      if (duplicateName.length > 0) {
-        setShowAlert(true);
-        setShowBlockModal(false);
-        setBlockName("");
-        setAlertMessage("Nome do bloco já cadastrado neste condomínio.");
-        return;
-      }
-
-      setShowBlockModal(false);
-      let temp = [...blocksArray];
-      temp.push({ name: blockName });
-      setBlocksArray(temp);
-      setBlockName("");
-      return;
-    } catch (error: any) {
-      console.log(error.message);
-      return;
-    }
-  };
-
   const deleteBlock = (index: number) => {
     let temp = [...blocksArray];
     temp.splice(index, 1);
@@ -898,48 +872,6 @@ export default function Condominium() {
             autoFocus
           >
             Confirmar Exclusão.
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        open={showBlockModal}
-        onClose={() => {
-          setShowBlockModal(false);
-        }}
-      >
-        <DialogTitle id="alert-dialog-title">
-          Adicionar Bloco ao Condomínio
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            variant="outlined"
-            label="Nome do Bloco"
-            InputLabelProps={{ shrink: true }}
-            value={blockName}
-            fullWidth
-            onChange={(
-              event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-            ) => {
-              setBlockName(event.target.value);
-            }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setShowBlockModal(false);
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={() => {
-              addBlock();
-            }}
-            variant="contained"
-            autoFocus
-          >
-            Adicionar Bloco
           </Button>
         </DialogActions>
       </Dialog>
