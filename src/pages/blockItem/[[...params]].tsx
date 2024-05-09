@@ -33,12 +33,14 @@ export default function BlockItem() {
   >([]);
 
   const router = useRouter();
-  const id = router.query.id;
-  const { name } = router.query;
+  const params = router.query.params as string[];
+  const condoName = params[0];
+  const blockId = params[1];
+  const blockName = params[2];
   const context = useApplicationContext();
 
   const initialSetup = async () => {
-    const controllerResponse = await fetchApi.get(`/blocks/${id}`, {
+    const controllerResponse = await fetchApi.get(`/blocks/${blockId}`, {
       headers: {
         "router-id": "WEB#API",
         Authorization: context.getToken(),
@@ -72,14 +74,14 @@ export default function BlockItem() {
           href: "/myCondos",
         },
         {
-          text: `${name}`,
+          text: `${condoName}`,
           iconName: "home",
-          href: `/condoItem/${name}`,
+          href: `/condoItem/${condoName}`,
         },
         {
-          text: `${block.name}`,
+          text: `${blockName}`,
           iconName: "apartment",
-          href: `/condoItem/${block.name}`,
+          href: `/condoItem/${blockName}`,
         },
       ]}
       loading={loading}
@@ -170,41 +172,44 @@ export default function BlockItem() {
                   </Grid>
                 </Grid>
                 {habitationsArray.length > 0 &&
-                  habitationsArray.map((item, index) => (
-                    <Grid
-                      item
-                      xs={12}
-                      sm={12}
-                      md={12}
-                      lg={12}
-                      xl={12}
-                      key={index}
-                    >
-                      <Tooltip title="Clique para visualizar a habitação">
-                        <Link
-                          href={`/habitationItem/${item.id}`}
-                          style={{
-                            textDecoration: "none",
-                            color: "#000",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              border: (theme) =>
-                                `2px solid ${theme.palette.primary.dark}`,
-                              padding: 1,
-                              borderRadius: 2,
-                              marginTop: 1,
+                  habitationsArray.map((item, index) => {
+                    const url = `/habitationItem/${condoName}/${blockName}/${item.id}/${item.nameOrNumber}`;
+                    return (
+                      <Grid
+                        item
+                        xs={12}
+                        sm={12}
+                        md={12}
+                        lg={12}
+                        xl={12}
+                        key={index}
+                      >
+                        <Tooltip title="Clique para visualizar a habitação">
+                          <Link
+                            href={url}
+                            style={{
+                              textDecoration: "none",
+                              color: "#000",
                             }}
                           >
-                            <Typography>
-                              Nome: <b>{item.nameOrNumber}</b>
-                            </Typography>
-                          </Box>
-                        </Link>
-                      </Tooltip>
-                    </Grid>
-                  ))}
+                            <Box
+                              sx={{
+                                border: (theme) =>
+                                  `2px solid ${theme.palette.primary.dark}`,
+                                padding: 1,
+                                borderRadius: 2,
+                                marginTop: 1,
+                              }}
+                            >
+                              <Typography>
+                                Nome: <b>{item.nameOrNumber}</b>
+                              </Typography>
+                            </Box>
+                          </Link>
+                        </Tooltip>
+                      </Grid>
+                    );
+                  })}
               </Grid>
             </Grid>
           </Paper>

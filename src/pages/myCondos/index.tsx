@@ -26,13 +26,27 @@ export default function MyCondos() {
   const [alertMessage, setAlertMessage] = useState<string>("");
 
   const [condosArray, setCondosArray] = useState<any[]>([]);
+  const [contractorKeys, setContractorKeys] = useState<
+    { id: string; value: string }[]
+  >([]);
 
   const context = useApplicationContext();
 
   const initialSetup = async () => {
     try {
-      const controllerResponse = await fetchApi.get(
-        `/contractor/get-condos/1`,
+      const controllerResponse = await fetchApi.get(`/contractor/get-condos`, {
+        headers: {
+          Authorization: context.getToken(),
+          "router-id": "WEB#API",
+        },
+      });
+
+      if (controllerResponse.data && controllerResponse.data.length > 0) {
+        setCondosArray(controllerResponse.data);
+      }
+
+      const contractorKeys = await fetchApi.get(
+        `/subscriptionKeys/contractor/${controllerResponse.data[0].contractorId}`,
         {
           headers: {
             Authorization: context.getToken(),
@@ -41,11 +55,9 @@ export default function MyCondos() {
         }
       );
 
-      if (controllerResponse.data && controllerResponse.data.length > 0) {
-        setCondosArray(controllerResponse.data);
+      if (contractorKeys.data.length > 0) {
+        setContractorKeys(contractorKeys.data);
       }
-
-      console.log("controllerResponse", controllerResponse);
     } catch (error: any) {
       console.log(error.message);
     }
@@ -55,21 +67,6 @@ export default function MyCondos() {
     initialSetup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const keys: any[] = [
-    {
-      id: "1",
-      value: "ajsdb23847KJBasd982",
-    },
-    {
-      id: "2",
-      value: "ajsdb23847KJBasd982",
-    },
-    {
-      id: "3",
-      value: "ajsdb23847KJBasd982",
-    },
-  ];
 
   const addCondo = async () => {
     setShowSubscription(true);
@@ -143,7 +140,7 @@ export default function MyCondos() {
                   >
                     <Tooltip title="Clique para visualizar o condomínio">
                       <Link
-                        href={`/condoItem/${item.id}`}
+                        href={`/condoItem/${item.id}/${item.name}`}
                         style={{
                           textDecoration: "none",
                           color: "#000",
@@ -194,8 +191,8 @@ export default function MyCondos() {
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            {keys.length > 0
-              ? keys.map((item, index) => (
+            {contractorKeys.length > 0
+              ? contractorKeys.map((item, index) => (
                   <Grid
                     container
                     spacing={2}
@@ -210,13 +207,18 @@ export default function MyCondos() {
                     </Grid>
                     <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
                       <Tooltip title="Utilizar esta Chave">
-                        <IconButton
-                          sx={{
-                            color: (theme) => `${theme.palette.primary.dark}`,
-                          }}
-                        >
-                          {<CopyAll />}
-                        </IconButton>
+                        <Link href={`/planSignPage/${item.value}`}>
+                          <IconButton
+                            sx={{
+                              color: (theme) => `${theme.palette.primary.dark}`,
+                            }}
+                            onClick={() => {
+                              navigator.clipboard.writeText(item.value);
+                            }}
+                          >
+                            {<CopyAll />}
+                          </IconButton>
+                        </Link>
                       </Tooltip>
                     </Grid>
                   </Grid>

@@ -58,16 +58,23 @@ export default function HabitationItem() {
   const [residentsArray, setResidentsArray] = useState<residentTypeProps[]>([]);
 
   const router = useRouter();
-  const { id } = router.query;
+  const params = router.query.params as string[];
+  const condoName = params[0];
+  const blockName = params[1];
+  const habitationId = params[2];
+  const habitationName = params[3];
   const context = useApplicationContext();
 
   const initialSetup = async () => {
-    const controllerResponse = await fetchApi.get(`/habitations/${id}`, {
-      headers: {
-        "router-id": "WEB#API",
-        Authorization: context.getToken(),
-      },
-    });
+    const controllerResponse = await fetchApi.get(
+      `/habitations/${habitationId}`,
+      {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      }
+    );
 
     if (controllerResponse.success) {
       setHabitation({
@@ -156,7 +163,7 @@ export default function HabitationItem() {
 
       //Fazer update da habitação com os moradores a cada vez que o usuário deletar um valor
       const controllerResponse = await fetchApi.post(
-        `/habitations/update/${id}`,
+        `/habitations/update/${habitationId}`,
         {
           //Objeto da Habitação com os devidos moradores
         },
@@ -217,12 +224,17 @@ export default function HabitationItem() {
           href: "/condominium",
         },
         {
-          text: "Blocos",
+          text: `${condoName}`,
+          iconName: "home_work",
+          href: "/myCondos",
+        },
+        {
+          text: `${blockName}`,
           iconName: "apartment",
           href: "/blocks",
         },
         {
-          text: "Habitações",
+          text: `${habitationName}`,
           iconName: "home",
           href: "/habitations",
         },
