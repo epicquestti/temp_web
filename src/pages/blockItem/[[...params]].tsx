@@ -1,13 +1,19 @@
 import ViewWrapper from "@/components/ViewWrapper";
 import { useApplicationContext } from "@/context/ApplicationContext";
 import fetchApi from "@/lib/fetchApi";
-import { Add, Edit } from "@mui/icons-material";
+import { Add, DeleteForever, Edit, Save } from "@mui/icons-material";
 import {
   Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Fab,
   Grid,
+  IconButton,
   Paper,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -20,6 +26,14 @@ export default function BlockItem() {
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [allowEditing, setAllowEditing] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
+
+  const [showHabitationModal, setShowHabitationModal] =
+    useState<boolean>(false);
+  const [showDeleteHabitationControl, setShowDeleteHabitationControl] =
+    useState<boolean>(false);
+  const [habitationToDelete, setHabitationToDelete] = useState<string>("");
+
+  const [habitationName, setHabitationName] = useState<string>("");
 
   const [block, setBlock] = useState<{ id: string; name: string }>({
     id: "",
@@ -36,7 +50,7 @@ export default function BlockItem() {
   const params = router.query.params as string[];
   const condoName = params[0];
   const blockId = params[1];
-  const blockName = params[2];
+  const name = params[2];
   const context = useApplicationContext();
 
   const initialSetup = async () => {
@@ -60,6 +74,62 @@ export default function BlockItem() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const addHabitation = async () => {
+    try {
+      if (habitationName === "") {
+        setAlertMessage("Por favor preencha o nome da habitação.");
+        setShowAlert(true);
+      }
+
+      const duplicate = habitationsArray.filter(
+        (value) =>
+          value.nameOrNumber.toUpperCase() === habitationName.toUpperCase()
+      );
+      console.log("duplicate", duplicate);
+
+      if (duplicate.length > 0) {
+        setHabitationName("");
+        setAlertMessage(
+          "Já existe uma habitação com esse nome cadastrada neste bloco."
+        );
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+        return;
+      }
+
+      const temp = [...habitationsArray];
+      temp.push({ id: "", nameOrNumber: habitationName });
+      setHabitationsArray(() => temp);
+      setHabitationName("");
+      setShowHabitationModal(false);
+    } catch (error: any) {
+      console.log(error.message);
+    }
+  };
+
+  const deleteHabitation = async () => {
+    try {
+      if (habitationToDelete !== "") {
+        setShowDeleteHabitationControl(false);
+        const itemIndex = habitationsArray.findIndex(
+          (value) => value.nameOrNumber === habitationToDelete
+        );
+
+        if (itemIndex !== -1) {
+          const temp = [...habitationsArray];
+          temp.splice(itemIndex, 1);
+          setHabitationsArray(() => temp);
+        }
+      }
+
+      //Fazer update do condomínio assim que excluir o bloco
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  };
+
   return (
     <ViewWrapper
       locals={[
@@ -79,9 +149,9 @@ export default function BlockItem() {
           href: `/condoItem/${condoName}`,
         },
         {
-          text: `${blockName}`,
+          text: `${name}`,
           iconName: "apartment",
-          href: `/condoItem/${blockName}`,
+          href: `/condoItem/${name}`,
         },
       ]}
       loading={loading}
@@ -133,11 +203,74 @@ export default function BlockItem() {
                   </Button>
                 </Box>
               </Grid>
+              {allowEditing ? (
+                <>
+                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                    <TextField
+                      variant="outlined"
+                      label="Nome do Bloco"
+                      InputLabelProps={{ shrink: true }}
+                      value={block.name}
+                      inputProps={{ readOnly: !allowEditing }}
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<Save />}
+                      type="submit"
+                      onClick={() => {
+                        if (!allowEditing) {
+                          return;
+                        } else {
+                          console.log("Botão Funcionando");
+                        }
+                      }}
+                    >
+                      {allowEditing ? "Salvar" : "Salvar (Desativado)"}
+                    </Button>
+                  </Grid>
+                </>
+              ) : (
+                <>
+                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                    <Typography>
+                      Nome: <b>{block.name}</b>
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                    <Typography>
+                      Condomínio: <b>{condoName}</b>
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<Save />}
+                      type="submit"
+                      onClick={() => {
+                        if (!allowEditing) {
+                          return;
+                        } else {
+                          console.log("Botão Funcionando");
+                        }
+                      }}
+                    >
+                      {allowEditing ? "Salvar" : "Salvar (Desativado)"}
+                    </Button>
+                  </Grid>
+                </>
+              )}
             </Grid>
           </Paper>
         </Grid>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
+            {JSON.stringify(habitationsArray)}
+            {JSON.stringify(habitationName)}
             <Grid
               container
               spacing={2}
@@ -164,7 +297,11 @@ export default function BlockItem() {
                           alignItems: "center",
                         }}
                       >
-                        <Fab color="primary" aria-label="add">
+                        <Fab
+                          color="primary"
+                          aria-label="add"
+                          onClick={() => setShowHabitationModal(true)}
+                        >
                           <Add />
                         </Fab>
                       </Box>
@@ -173,7 +310,7 @@ export default function BlockItem() {
                 </Grid>
                 {habitationsArray.length > 0 &&
                   habitationsArray.map((item, index) => {
-                    const url = `/habitationItem/${condoName}/${blockName}/${item.id}/${item.nameOrNumber}`;
+                    const url = `/habitationItem/${condoName}/${block.name}/${item.id}/${item.nameOrNumber}`;
                     return (
                       <Grid
                         item
@@ -184,29 +321,54 @@ export default function BlockItem() {
                         xl={12}
                         key={index}
                       >
-                        <Tooltip title="Clique para visualizar a habitação">
-                          <Link
-                            href={url}
-                            style={{
-                              textDecoration: "none",
-                              color: "#000",
-                            }}
+                        <Box
+                          sx={{
+                            border: (theme) =>
+                              `2px solid ${theme.palette.primary.dark}`,
+                            padding: 1,
+                            borderRadius: 2,
+                            marginTop: 1,
+                          }}
+                        >
+                          <Grid
+                            container
+                            spacing={2}
+                            alignItems="center"
+                            justifyContent="center"
                           >
-                            <Box
-                              sx={{
-                                border: (theme) =>
-                                  `2px solid ${theme.palette.primary.dark}`,
-                                padding: 1,
-                                borderRadius: 2,
-                                marginTop: 1,
-                              }}
-                            >
-                              <Typography>
-                                Nome: <b>{item.nameOrNumber}</b>
-                              </Typography>
-                            </Box>
-                          </Link>
-                        </Tooltip>
+                            <Grid item xs={12} sm={12} md={11} lg={11} xl={11}>
+                              <Link
+                                href={url}
+                                style={{
+                                  textDecoration: "none",
+                                  color: "#000",
+                                }}
+                              >
+                                <Tooltip title="Clique para visualizar a habitação">
+                                  <Typography>
+                                    Nome: <b>{item.nameOrNumber}</b>
+                                  </Typography>
+                                </Tooltip>
+                              </Link>
+                            </Grid>
+
+                            <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
+                              <IconButton
+                                size="large"
+                                sx={{
+                                  color: (theme) =>
+                                    ` ${theme.palette.error.main}`,
+                                }}
+                                onClick={() => {
+                                  setShowDeleteHabitationControl(true);
+                                  setHabitationToDelete(item.nameOrNumber);
+                                }}
+                              >
+                                <DeleteForever />
+                              </IconButton>
+                            </Grid>
+                          </Grid>
+                        </Box>
                       </Grid>
                     );
                   })}
@@ -215,6 +377,72 @@ export default function BlockItem() {
           </Paper>
         </Grid>
       </Grid>
+      <Dialog
+        open={showHabitationModal}
+        onClose={() => {
+          setShowHabitationModal(false);
+        }}
+      >
+        <DialogTitle id="alert-dialog-title">
+          Adicionar Habitação ao Bloco
+        </DialogTitle>
+        <DialogContent>
+          {/* <HabitationModal
+            name={habitationName}
+            setName={(value: string) => {
+              setHabitationName(value);
+            }}
+          /> */}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowHabitationModal(false);
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              addHabitation();
+            }}
+            variant="contained"
+            autoFocus
+          >
+            Adicionar Habitação
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={showDeleteHabitationControl}
+        onClose={() => {
+          setShowDeleteHabitationControl(false);
+        }}
+      >
+        <DialogTitle id="alert-dialog-title">
+          Esta é uma ação irreversível. Tem certeza que deseja excluir a
+          Habitação?
+        </DialogTitle>
+
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowDeleteHabitationControl(false);
+            }}
+            variant="contained"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              deleteHabitation();
+            }}
+            autoFocus
+          >
+            Excluir Habitação
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ViewWrapper>
   );
 }

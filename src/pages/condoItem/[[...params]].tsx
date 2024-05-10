@@ -25,6 +25,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { ChangeEvent, useEffect, useState } from "react";
+import HabitationModal from "./habitationModal";
 
 type condoType = {
   id: string;
@@ -52,9 +53,36 @@ export default function CondoItem() {
   const params = router.query.params as string[];
   const condoId = params[0];
   const condoName = params[1];
+
   const [allowEditing, setAllowEditing] = useState<boolean>(false);
+
   const [showBlockModal, setShowBlockModal] = useState<boolean>(false);
   const [blockToDelete, setBlockToDelete] = useState<string>("");
+  const [selectedBlock, setSelectedBlock] = useState<blockType>({
+    id: "",
+    name: "",
+    condominiumId: condoId,
+  });
+
+  const [showHabitationModal, setShowHabitationModal] =
+    useState<boolean>(false);
+  const [habitation, setHabitation] = useState<{
+    name: string;
+    blockId: string;
+  }>({
+    name: "",
+    blockId: "",
+  });
+  const [habitationsArray, setHabitationsArray] = useState<
+    {
+      id: string;
+      nameOrNumber: string;
+    }[]
+  >([]);
+
+  const [showDeleteHabitationControl, setShowDeleteHabitationControl] =
+    useState<boolean>(false);
+  const [habitationToDelete, setHabitationToDelete] = useState<string>("");
 
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
@@ -105,7 +133,6 @@ export default function CondoItem() {
       const duplicateName = blocksArray.filter(
         (value) => value.name.toUpperCase() === blockName.toUpperCase()
       );
-      console.log("duplicateName", duplicateName);
 
       if (duplicateName.length > 0) {
         setAlertMessage("Nome do bloco já cadastrado neste condomínio.");
@@ -120,6 +147,20 @@ export default function CondoItem() {
       temp.push({ condominiumId: "", id: "", name: blockName });
       setBlocksArray(temp);
       setBlockName("");
+
+      const blockObj = { name: blockName, condominiumId: condoId };
+      //Salvar o bloco no Banco
+      const controllerResponse = await fetchApi.post(`/blocks/new`, blockObj, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      });
+
+      if (controllerResponse.success) {
+        initialSetup();
+      }
+
       return;
     } catch (error: any) {
       console.log(error.message);
@@ -148,6 +189,58 @@ export default function CondoItem() {
     }
   };
 
+  const addHabitation = async () => {
+    try {
+      if (habitation.name === "") {
+        setAlertMessage("Por favor, preencha o nome da Moradia.");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+      }
+
+      const duplicateName = habitationsArray.filter(
+        (value) =>
+          value.nameOrNumber.toUpperCase() === habitation.name.toUpperCase()
+      );
+      console.log("duplicateName", duplicateName);
+
+      if (duplicateName.length > 0) {
+        console.log("Duplicata");
+
+        setAlertMessage("Nome da moradia já cadastrado neste condomínio.");
+        setShowAlert(true);
+        setShowHabitationModal(false);
+        setHabitation((prev) => ({ ...prev, name: "" }));
+        return;
+      }
+
+      setShowHabitationModal(false);
+      let temp = [...habitationsArray];
+      temp.push({ id: "", nameOrNumber: habitation.name });
+      setHabitationsArray(temp);
+      setBlockName("");
+      return;
+    } catch (error: any) {
+      console.log(error.message);
+    }
+  };
+
+  const handleBlockChange = async (value: string) => {
+    const selected = blocksArray.filter(
+      (item: { id: string; name: string }) => {
+        return item.id === value;
+      }
+    );
+    console.log("selected", selected);
+
+    setSelectedBlock((prev) => ({
+      ...prev,
+      id: selected[0].id,
+      name: selected[0].name,
+    }));
+  };
+
   return (
     <ViewWrapper
       locals={[
@@ -167,6 +260,11 @@ export default function CondoItem() {
           href: `/condoItem/${condoId}/${condoName}`,
         },
       ]}
+      alerMessage={alertMessage}
+      showAlert={showAlert}
+      closeAlert={() => {
+        setShowAlert(false);
+      }}
     >
       <Grid container spacing={2}>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
@@ -186,6 +284,7 @@ export default function CondoItem() {
                     alignItems: "center",
                   }}
                 >
+                  {JSON.stringify(selectedBlock)}
                   <Typography variant="h4">Dados do Condomínio</Typography>
                 </Box>
               </Grid>
@@ -450,7 +549,7 @@ export default function CondoItem() {
                   justifyContent="center"
                 >
                   <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
-                    <Typography variant="h4">Blocos</Typography>
+                    <Typography variant="h4">Blocos Cadastrados</Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
                     <Tooltip title="Adicionar Bloco">
@@ -541,6 +640,118 @@ export default function CondoItem() {
             </Grid>
           </Paper>
         </Grid>
+        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+          <Paper sx={{ p: 3 }}>
+            <Grid
+              container
+              spacing={2}
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                <Grid
+                  container
+                  spacing={2}
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
+                    <Typography variant="h4">Moradias Cadastradas</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                    <Tooltip title="Adicionar Moradia">
+                      <Box
+                        sx={{
+                          width: "100%",
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Fab
+                          color="primary"
+                          aria-label="add"
+                          onClick={() => setShowHabitationModal(true)}
+                        >
+                          <Add />
+                        </Fab>
+                      </Box>
+                    </Tooltip>
+                  </Grid>
+                  {habitationsArray.length > 0 &&
+                    habitationsArray.map((item, index) => {
+                      // const url = `/habitationItem/${condoName}/${block.name}/${item.id}/${item.nameOrNumber}`;
+                      return (
+                        <Grid
+                          item
+                          xs={12}
+                          sm={12}
+                          md={12}
+                          lg={12}
+                          xl={12}
+                          key={index}
+                        >
+                          <Box
+                            sx={{
+                              border: (theme) =>
+                                `2px solid ${theme.palette.primary.dark}`,
+                              padding: 1,
+                              borderRadius: 2,
+                              marginTop: 1,
+                            }}
+                          >
+                            <Grid
+                              container
+                              spacing={2}
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              <Grid
+                                item
+                                xs={12}
+                                sm={12}
+                                md={11}
+                                lg={11}
+                                xl={11}
+                              >
+                                <Link
+                                  href={""}
+                                  style={{
+                                    textDecoration: "none",
+                                    color: "#000",
+                                  }}
+                                >
+                                  <Typography>
+                                    Nome: <b>{item.nameOrNumber}</b>
+                                  </Typography>
+                                </Link>
+                              </Grid>
+
+                              <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
+                                <IconButton
+                                  size="large"
+                                  sx={{
+                                    color: (theme) =>
+                                      ` ${theme.palette.error.main}`,
+                                  }}
+                                  onClick={() => {
+                                    setShowDeleteHabitationControl(true);
+                                    setHabitationToDelete(item.nameOrNumber);
+                                  }}
+                                >
+                                  <DeleteForever />
+                                </IconButton>
+                              </Grid>
+                            </Grid>
+                          </Box>
+                        </Grid>
+                      );
+                    })}
+                </Grid>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
       </Grid>
       <Dialog
         open={showBlockModal}
@@ -610,6 +821,46 @@ export default function CondoItem() {
             autoFocus
           >
             Excluir Bloco
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={showHabitationModal}
+        onClose={() => {
+          setShowHabitationModal(false);
+        }}
+      >
+        <DialogTitle id="alert-dialog-title">
+          Adicionar Moradia ao Condomínio
+        </DialogTitle>
+        <DialogContent>
+          <HabitationModal
+            name={habitation.name}
+            selectedBlock={selectedBlock}
+            blocksArray={blocksArray}
+            onOpen={() => console.log("ajsbdahsvd")}
+            setName={(name: string) => {
+              setHabitation((prev) => ({ ...prev, name }));
+            }}
+            onBlockChange={handleBlockChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowHabitationModal(false);
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              addHabitation();
+            }}
+            variant="contained"
+            autoFocus
+          >
+            Adicionar Moradia
           </Button>
         </DialogActions>
       </Dialog>

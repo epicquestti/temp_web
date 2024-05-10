@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { ChangeEvent, Fragment, useEffect, useState } from "react";
 import ResidentModal, { residentTypeProps } from "./residentModal";
 
 export default function HabitationItem() {
@@ -56,6 +56,7 @@ export default function HabitationItem() {
   });
 
   const [residentsArray, setResidentsArray] = useState<residentTypeProps[]>([]);
+  const [residentToDelete, setResidentToDelete] = useState<string>("");
 
   const router = useRouter();
   const params = router.query.params as string[];
@@ -152,6 +153,8 @@ export default function HabitationItem() {
       return;
     }
 
+    const updateResponse = await fetchApi.post(``);
+
     residentsArray.push(resident);
     clearResident();
     setShowResidentModal(false);
@@ -159,14 +162,17 @@ export default function HabitationItem() {
 
   const updateHabitation = async () => {
     try {
-      const habitationObj = {};
+      const habitationObj = {
+        id: habitation.id,
+        nameOrNumber: habitation.nameOrNumber,
+        residents: residentsArray,
+      };
 
       //Fazer update da habitação com os moradores a cada vez que o usuário deletar um valor
       const controllerResponse = await fetchApi.post(
-        `/habitations/update/${habitationId}`,
-        {
-          //Objeto da Habitação com os devidos moradores
-        },
+        `/habitations/update/${habitation.id}`,
+        habitationObj,
+
         {
           headers: {
             "router-id": "WEB#API",
@@ -174,6 +180,8 @@ export default function HabitationItem() {
           },
         }
       );
+
+      console.log("controllerResponse", controllerResponse);
     } catch (error) {
       setAlertMessage("Erro ao editar Moradia");
       setShowAlert(true);
@@ -183,11 +191,11 @@ export default function HabitationItem() {
     }
   };
 
-  const deleteResident = async (cpf: string) => {
+  const deleteResident = async () => {
     try {
       setShowDeleteResidentControl(false);
       const residentIndex = residentsArray.findIndex(
-        (resident) => resident.cpf === cpf
+        (resident) => resident.cpf === residentToDelete
       );
 
       console.log(residentIndex);
@@ -266,6 +274,7 @@ export default function HabitationItem() {
                   }}
                 >
                   <Typography variant="h4">Dados da Habitação</Typography>
+                  {JSON.stringify(residentToDelete)}
                 </Box>
               </Grid>
               <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
@@ -296,23 +305,39 @@ export default function HabitationItem() {
                       label="Nome da Moradia"
                       InputLabelProps={{ shrink: true }}
                       value={habitation.nameOrNumber}
-                      // disabled={allowEditing}
                       inputProps={{ readOnly: !allowEditing }}
                       fullWidth
-                      // onChange={(
-                      //   event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-                      // ) => {
-                      //   setCondoName(event.target.value);
-                      // }}
+                      onChange={(
+                        event: ChangeEvent<
+                          HTMLInputElement | HTMLTextAreaElement
+                        >
+                      ) => {
+                        setHabitation((prev) => ({
+                          ...prev,
+                          nameOrNumber: event.target.value,
+                        }));
+                      }}
                     />
                   </Grid>
                 </>
               ) : (
-                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                  <Typography>
-                    Nome: <b>{habitation.nameOrNumber}</b>
-                  </Typography>
-                </Grid>
+                <Fragment>
+                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                    <Typography>
+                      Nome: <b>{habitation.nameOrNumber}</b>
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                    <Typography>
+                      Bloco: <b>{blockName}</b>
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                    <Typography>
+                      Condomínio: <b>{condoName}</b>
+                    </Typography>
+                  </Grid>
+                </Fragment>
               )}
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                 <Button
@@ -385,70 +410,88 @@ export default function HabitationItem() {
                       key={index}
                     >
                       {item.id ? (
-                        <Tooltip title="Clique para visualizar o Morador">
-                          <Link
-                            href={`/residentItem/${item.id}`}
-                            style={{
-                              textDecoration: "none",
-                              color: "#000",
+                        <Fragment>
+                          <Box
+                            sx={{
+                              border: (theme) =>
+                                `2px solid ${theme.palette.primary.dark}`,
+                              padding: 1,
+                              borderRadius: 2,
+                              marginTop: 1,
                             }}
                           >
-                            <Box
-                              sx={{
-                                border: (theme) =>
-                                  `2px solid ${theme.palette.primary.dark}`,
-                                padding: 1,
-                                borderRadius: 2,
-                                marginTop: 1,
-                              }}
+                            <Grid
+                              container
+                              spacing={2}
+                              alignItems="center"
+                              justifyContent="center"
                             >
                               <Grid
-                                container
-                                spacing={2}
-                                alignItems="center"
-                                justifyContent="center"
+                                item
+                                xs={12}
+                                sm={12}
+                                md={11}
+                                lg={11}
+                                xl={11}
                               >
-                                <Grid
-                                  item
-                                  xs={12}
-                                  sm={12}
-                                  md={11}
-                                  lg={11}
-                                  xl={11}
-                                >
-                                  <Typography>
-                                    Nome: <b>{item.name}</b>
-                                  </Typography>
-                                  <Typography>
-                                    CPF: <b>{item.cpf}</b>
-                                  </Typography>
-                                  <Typography>
-                                    Telefone: <b>{item.phone}</b>
-                                  </Typography>
-                                  <Typography>
-                                    E-Mail: <b>{item.email}</b>
-                                  </Typography>
-                                </Grid>
-                                <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
-                                  <Tooltip title="Clique para excluir o morador">
-                                    <IconButton
-                                      size="large"
-                                      sx={{
-                                        color: (theme) =>
-                                          ` ${theme.palette.error.main}`,
-                                      }}
-                                      onClick={() =>
-                                        setShowDeleteResidentControl(true)
-                                      }
-                                    >
-                                      <DeleteForever />
-                                    </IconButton>
-                                  </Tooltip>
-                                </Grid>
+                                <Tooltip title="Clique para visualizar o Morador">
+                                  <Link
+                                    href={`/residentItem/${item.id}`}
+                                    style={{
+                                      textDecoration: "none",
+                                      color: "#000",
+                                    }}
+                                  >
+                                    <Typography>
+                                      Nome: <b>{item.name}</b>
+                                    </Typography>
+                                    <Typography>
+                                      CPF:{" "}
+                                      <b>
+                                        {item.cpf
+                                          ? cpfMask(item.cpf)
+                                          : "Não informado"}
+                                      </b>
+                                    </Typography>
+                                    <Typography>
+                                      Telefone:{" "}
+                                      <b>
+                                        {item.phone
+                                          ? phoneMask(item.phone)
+                                          : ""}
+                                      </b>
+                                    </Typography>
+                                    <Typography>
+                                      E-Mail:{" "}
+                                      <b>
+                                        {item.email
+                                          ? item.email
+                                          : "Não informado"}
+                                      </b>
+                                    </Typography>
+                                  </Link>
+                                </Tooltip>
                               </Grid>
-                            </Box>
-                          </Link>
-                        </Tooltip>
+                              <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
+                                <Tooltip title="Clique para excluir o morador">
+                                  <IconButton
+                                    size="large"
+                                    sx={{
+                                      color: (theme) =>
+                                        ` ${theme.palette.error.main}`,
+                                    }}
+                                    onClick={() => {
+                                      setShowDeleteResidentControl(true);
+                                      setResidentToDelete(item.cpf);
+                                    }}
+                                  >
+                                    <DeleteForever />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+                            </Grid>
+                          </Box>
+                        </Fragment>
                       ) : (
                         <Box
                           sx={{
@@ -487,9 +530,10 @@ export default function HabitationItem() {
                                     color: (theme) =>
                                       ` ${theme.palette.error.main}`,
                                   }}
-                                  onClick={() =>
-                                    setShowDeleteResidentControl(true)
-                                  }
+                                  onClick={() => {
+                                    setShowDeleteResidentControl(true);
+                                    setResidentToDelete(item.cpf);
+                                  }}
                                 >
                                   <DeleteForever />
                                 </IconButton>
@@ -583,7 +627,7 @@ export default function HabitationItem() {
           </Button>
           <Button
             onClick={() => {
-              deleteResident("123");
+              deleteResident();
             }}
             autoFocus
           >
