@@ -47,6 +47,7 @@ export default function HabitationModal(props: habitationModalProps) {
                   props.onBlockChange(event.target.value);
                 }}
               >
+                <MenuItem value={"0"}>Selecione um Bloco (Opcional)</MenuItem>
                 {props.blocksArray &&
                   props.blocksArray.map((item) => (
                     <MenuItem key={item.id} value={item.id}>
