@@ -28,17 +28,15 @@ import { useRouter } from "next/router";
 import { ChangeEvent, useEffect, useState } from "react";
 import HabitationModal from "./habitationModal";
 
-type condoType = {
+type addressType = {
   id: string;
-  name: string;
   cnpj?: string;
-  addressId: string;
   street: string;
   streetNumber: string;
   neighborhood: string;
   complement?: string;
   cep: string;
-  city: string;
+  cityName: string;
   cityIbge: number | null;
   state: string;
   stateName: string;
@@ -61,9 +59,12 @@ export default function CondoItem() {
   const [allowEditing, setAllowEditing] = useState<boolean>(false);
 
   const [showBlockModal, setShowBlockModal] = useState<boolean>(false);
-  const [blockToDelete, setBlockToDelete] = useState<string>("");
+  const [blockToDelete, setBlockToDelete] = useState<{
+    id: string | null;
+    name: string;
+  }>({ id: null, name: "" });
   const [selectedBlock, setSelectedBlock] = useState<blockType>({
-    id: "",
+    id: "0",
     name: "",
     condominiumId: condoId,
   });
@@ -72,15 +73,15 @@ export default function CondoItem() {
     useState<boolean>(false);
   const [habitation, setHabitation] = useState<{
     name: string;
-    blockId: string;
+    blockId: string | null;
   }>({
     name: "",
     blockId: "",
   });
   const [habitationsArray, setHabitationsArray] = useState<
     {
-      id: string;
-      nameOrNumber: string;
+      habitationId: string;
+      habitationName: string;
       blockId: string | null;
       blockName: string | null;
     }[]
@@ -100,6 +101,8 @@ export default function CondoItem() {
   const [alertMessage, setAlertMessage] = useState<string>("");
   const [showDeleteBlockControl, setShowDeleteBlockControl] =
     useState<boolean>(false);
+  const [showSecondBlockQuestion, setShowSecondBlockQuestion] =
+    useState<boolean>(false);
 
   const [blockName, setBlockName] = useState<string>("");
 
@@ -112,21 +115,28 @@ export default function CondoItem() {
   >([]);
   const [selectedState, setSelectedState] = useState<string>("");
 
-  const [condoItem, setCondoItem] = useState<condoType>({
+  const [address, setAddress] = useState<addressType>({
     id: "",
-    name: "",
-    cnpj: "",
-    addressId: "",
     street: "",
     streetNumber: "",
     neighborhood: "",
     complement: "",
     cep: "",
-    city: "",
+    cityName: "",
     cityIbge: null,
     state: "",
     stateName: "",
     stateIbge: "",
+  });
+
+  const [condoItem, setCondoItem] = useState<{
+    id: string;
+    name: string;
+    cnpj: string;
+  }>({
+    cnpj: "",
+    id: "",
+    name: "",
   });
 
   const [blocksArray, setBlocksArray] = useState<blockType[]>([]);
@@ -143,6 +153,7 @@ export default function CondoItem() {
 
     if (controllerResponse.success) {
       setCondoItem(controllerResponse.data.condo);
+      setAddress(controllerResponse.data.address);
       if (controllerResponse.data.blocks.length > 0) {
         setBlocksArray(controllerResponse.data.blocks);
         setHabitationsArray(controllerResponse.data.habitations);
@@ -167,48 +178,57 @@ export default function CondoItem() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const updateCondominium = async () => {
-    try {
-      const condoObj = {
-        id: condoItem.id,
-        addressId: condoItem.addressId,
-        address: condoItem.street,
-        addressNumber: condoItem.streetNumber,
-        cep: condoItem.cep,
-        cityIbge: condoItem.cityIbge,
-        stateIbge: parseInt(selectedState),
-        cnpj: condoItem.cnpj,
-        complement: condoItem.complement,
-        name: condoItem.name,
-        neighborhood: condoItem.neighborhood,
-        habitations: habitationsArray,
-        blocks: blocksArray,
-      };
+  // const updateCondominium = async () => {
+  //   try {
+  //     const condoObj = {
+  //       id: condoItem.id,
+  //       addressId: condoItem.addressId,
+  //       address: condoItem.street,
+  //       addressNumber: condoItem.streetNumber,
+  //       cep: condoItem.cep,
+  //       cityIbge: condoItem.cityIbge,
+  //       stateIbge: parseInt(selectedState),
+  //       cnpj: condoItem.cnpj,
+  //       complement: condoItem.complement,
+  //       name: condoItem.name,
+  //       neighborhood: condoItem.neighborhood,
+  //       habitations: habitationsArray,
+  //       blocks: blocksArray,
+  //     };
 
-      //Fazer update do condomínio
-      const controllerResponse = await fetchApi.post(
-        `/condominium/update/${condoItem.id}/${condoItem.addressId}`,
-        condoObj,
-        {
-          headers: {
-            "router-id": "WEB#API",
-            Authorization: context.getToken(),
-          },
-        }
-      );
+  //     //Fazer update do condomínio
+  //     const controllerResponse = await fetchApi.post(
+  //       `/condominium/update/${condoItem.id}/${condoItem.addressId}`,
+  //       condoObj,
+  //       {
+  //         headers: {
+  //           "router-id": "WEB#API",
+  //           Authorization: context.getToken(),
+  //         },
+  //       }
+  //     );
 
-      if (controllerResponse.success) {
-        setCondoItem(controllerResponse.data.condo);
-        if (controllerResponse.data.blocks.length > 0) {
-          setBlocksArray(controllerResponse.data.blocks);
-        }
-      }
-    } catch (error: any) {
-      console.log(error.message);
-    }
-  };
+  //     if (controllerResponse.success) {
+  //       setCondoItem(controllerResponse.data.condo);
+  //       if (controllerResponse.data.blocks.length > 0) {
+  //         setBlocksArray(controllerResponse.data.blocks);
+  //       }
+  //     }
+  //   } catch (error: any) {
+  //     console.log(error.message);
+  //   }
+  // };
 
   const handleBlockChange = async (value: string) => {
+    if (value === "0") {
+      setHabitation((prev) => ({ ...prev, blockId: null }));
+      setSelectedBlock((prev) => ({
+        ...prev,
+        id: "0",
+        name: "",
+      }));
+      return;
+    }
     const selected = blocksArray.filter(
       (item: { id: string; name: string }) => {
         return item.id === value;
@@ -217,9 +237,10 @@ export default function CondoItem() {
 
     setSelectedBlock((prev) => ({
       ...prev,
-      id: selected[0].id || "0",
-      name: selected[0].name || "",
+      id: selected[0].id,
+      name: selected[0].name,
     }));
+    setHabitation((prev) => ({ ...prev, blockId: selected[0].id }));
   };
 
   const addBlock = async () => {
@@ -266,26 +287,42 @@ export default function CondoItem() {
 
   const deleteBlock = async () => {
     try {
-      if (blockToDelete !== "") {
+      if (blockToDelete.name !== "") {
+        setShowSecondBlockQuestion(false);
         setShowDeleteBlockControl(false);
+
         //Encontrar o index do bloco a ser excluído dentro do array de blocos
         const itemIndex = blocksArray.findIndex(
-          (value) => value.name === blockToDelete
+          (value) => value.name === blockToDelete.name
         );
 
+        //Excluir o bloco do array de blocos
         if (itemIndex !== -1) {
-          //Excluir o bloco do array de blocos
           const temp = [...blocksArray];
           temp.splice(itemIndex, 1);
           setBlocksArray(() => temp);
+        }
+
+        if (blockToDelete.id) {
+          const controllerResponse = await fetchApi.del(
+            `blocks/delete/${blockToDelete.id}/${condoItem.id}`,
+            {
+              headers: {
+                "router-id": "WEB#API",
+                Authorization: context.getToken(),
+              },
+            }
+          );
+
+          if (controllerResponse.success) {
+            initialSetup();
+          }
         }
       }
     } catch (error: any) {
       throw new Error(error.message);
     }
   };
-
-  useEffect(() => {}, [habitation]);
 
   const addHabitation = async () => {
     try {
@@ -301,7 +338,7 @@ export default function CondoItem() {
       //Encontrar nome duplicado sem bloco
       const duplicateName = habitationsArray.filter(
         (value) =>
-          value.nameOrNumber.toUpperCase() === habitation.name.toUpperCase()
+          value.habitationName.toUpperCase() === habitation.name.toUpperCase()
       );
 
       if (duplicateName.length > 0 && selectedBlock.id === "0") {
@@ -318,7 +355,7 @@ export default function CondoItem() {
       const blockSpecificDuplicates = habitationsArray.filter(
         (value) =>
           value.blockId === selectedBlock.id &&
-          value.nameOrNumber.toUpperCase() === habitation.name.toUpperCase()
+          value.habitationName.toUpperCase() === habitation.name.toUpperCase()
       );
 
       if (blockSpecificDuplicates.length > 0) {
@@ -335,14 +372,12 @@ export default function CondoItem() {
       //Adicionar a habitação ao array de habitações
       let temp = [...habitationsArray];
       temp.push({
-        id: "",
-        nameOrNumber: habitation.name,
-        blockId: selectedBlock.id === "0" ? null : selectedBlock.id,
-        blockName: selectedBlock.id === "0" ? "" : selectedBlock.name,
+        habitationId: "",
+        habitationName: habitation.name,
+        blockId: selectedBlock.id,
+        blockName: selectedBlock.name,
       });
       setHabitationsArray(() => temp);
-      setHabitation({ blockId: "0", name: "" });
-      setSelectedBlock({ condominiumId: "", id: "0", name: "0" });
 
       //Salvar a Habitação nova no banco
       const habitationObj = {
@@ -350,8 +385,9 @@ export default function CondoItem() {
         condominiumId: condoItem.id,
         name: habitation.name,
       };
+
       const habitationResponse = await fetchApi.post(
-        "habitations/new",
+        `/habitations/new`,
         habitationObj,
         {
           headers: {
@@ -360,18 +396,9 @@ export default function CondoItem() {
           },
         }
       );
-
       console.log("habitationResponse", habitationResponse);
-
-      if (!habitationResponse.success) {
-        setAlertMessage("Erro ao inserir moradia no condomínio.");
-        setShowAlert(true);
-        setTimeout(() => {
-          setShowAlert(false);
-        }, 3000);
-        return;
-      }
-
+      setSelectedBlock({ condominiumId: "", id: "0", name: "0" });
+      setHabitation({ blockId: "0", name: "" });
       initialSetup();
     } catch (error: any) {
       console.log(error.message);
@@ -445,6 +472,7 @@ export default function CondoItem() {
       <Grid container spacing={2}>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
+            {JSON.stringify(blockToDelete)}
             <Grid
               container
               spacing={2}
@@ -530,7 +558,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Endereço"
                       InputLabelProps={{ shrink: true }}
-                      value={condoItem.street}
+                      value={address.street}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       onChange={(
@@ -538,7 +566,7 @@ export default function CondoItem() {
                           HTMLInputElement | HTMLTextAreaElement
                         >
                       ) => {
-                        setCondoItem((prev) => ({
+                        setAddress((prev) => ({
                           ...prev,
                           street: event.target.value,
                         }));
@@ -550,7 +578,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Bairro"
                       InputLabelProps={{ shrink: true }}
-                      value={condoItem.neighborhood}
+                      value={address.neighborhood}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       onChange={(
@@ -558,7 +586,7 @@ export default function CondoItem() {
                           HTMLInputElement | HTMLTextAreaElement
                         >
                       ) => {
-                        setCondoItem((prev) => ({
+                        setAddress((prev) => ({
                           ...prev,
                           neighborhood: event.target.value,
                         }));
@@ -570,7 +598,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Número"
                       InputLabelProps={{ shrink: true }}
-                      value={condoItem.streetNumber}
+                      value={address.streetNumber}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       onChange={(
@@ -578,7 +606,7 @@ export default function CondoItem() {
                           HTMLInputElement | HTMLTextAreaElement
                         >
                       ) => {
-                        setCondoItem((prev) => ({
+                        setAddress((prev) => ({
                           ...prev,
                           streetNumber: event.target.value,
                         }));
@@ -590,7 +618,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Complemento"
                       InputLabelProps={{ shrink: true }}
-                      value={condoItem.complement}
+                      value={address.complement}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       onChange={(
@@ -598,7 +626,7 @@ export default function CondoItem() {
                           HTMLInputElement | HTMLTextAreaElement
                         >
                       ) => {
-                        setCondoItem((prev) => ({
+                        setAddress((prev) => ({
                           ...prev,
                           complement: event.target.value,
                         }));
@@ -610,7 +638,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="CEP"
                       InputLabelProps={{ shrink: true }}
-                      value={condoItem.cep}
+                      value={cepMask(address.cep)}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       onChange={(
@@ -619,7 +647,7 @@ export default function CondoItem() {
                         >
                       ) => {
                         getCep(event.target.value);
-                        setCondoItem((prev) => ({
+                        setAddress((prev) => ({
                           ...prev,
                           cep: event.target.value,
                         }));
@@ -631,7 +659,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="Cidade"
                       InputLabelProps={{ shrink: true }}
-                      value={condoItem.city}
+                      value={address.cityName}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       onChange={(
@@ -639,7 +667,7 @@ export default function CondoItem() {
                           HTMLInputElement | HTMLTextAreaElement
                         >
                       ) => {
-                        setCondoItem((prev) => ({
+                        setAddress((prev) => ({
                           ...prev,
                           city: event.target.value,
                         }));
@@ -653,7 +681,7 @@ export default function CondoItem() {
                         labelId="stateId"
                         label="Estado"
                         inputProps={{ readOnly: !allowEditing }}
-                        value={condoItem.stateIbge}
+                        value={address.stateIbge}
                         onChange={(event: SelectChangeEvent) => {
                           console.log(event.target.value);
 
@@ -684,7 +712,7 @@ export default function CondoItem() {
                       startIcon={<Save />}
                       type="submit"
                       onClick={() => {
-                        updateCondominium();
+                        // updateCondominium();
                       }}
                     >
                       Salvar
@@ -706,38 +734,38 @@ export default function CondoItem() {
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Endereço: <b>{condoItem.street}</b>
+                      Endereço: <b>{address.street}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Bairro: <b>{condoItem.neighborhood}</b>
+                      Bairro: <b>{address.neighborhood}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Número: <b>{condoItem.streetNumber}</b>
+                      Número: <b>{address.streetNumber}</b>
                     </Typography>
                   </Grid>
 
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      CEP: <b>{condoItem.cep ? cepMask(condoItem.cep) : ""}</b>
+                      CEP: <b>{address.cep ? cepMask(address.cep) : ""}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Cidade: <b>{condoItem.city}</b>
+                      Cidade: <b>{address.cityName}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Estado: <b>{condoItem.state}</b>
+                      Estado: <b>{address.stateName}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <Typography>
-                      Complemento: <b>{condoItem.complement}</b>
+                      Complemento: <b>{address.complement}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
@@ -747,7 +775,7 @@ export default function CondoItem() {
                       startIcon={<Save />}
                       type="submit"
                       onClick={() => {
-                        updateCondominium();
+                        // updateCondominium();
                       }}
                     >
                       Salvar
@@ -856,7 +884,11 @@ export default function CondoItem() {
                                 }}
                                 onClick={() => {
                                   setShowDeleteBlockControl(true);
-                                  setBlockToDelete(item.name);
+                                  setBlockToDelete((prev) => ({
+                                    ...prev,
+                                    id: item.id ? item.id : null,
+                                    name: item.name,
+                                  }));
                                 }}
                               >
                                 <DeleteForever />
@@ -887,7 +919,6 @@ export default function CondoItem() {
                   justifyContent="center"
                 >
                   <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
-                    {JSON.stringify(habitationsArray)}
                     <Typography variant="h4">Moradias Cadastradas</Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
@@ -913,7 +944,7 @@ export default function CondoItem() {
                   {habitationsArray &&
                     habitationsArray.length > 0 &&
                     habitationsArray.map((item, index) => {
-                      const url = `/habitationItem/${condoName}/${item.blockName}/${item.id}/${item.nameOrNumber}`;
+                      const url = `/habitationItem/${condoName}/${item.blockName}/${item.habitationId}/${item.habitationName}`;
                       return (
                         <Grid
                           item
@@ -971,7 +1002,7 @@ export default function CondoItem() {
                                           xl={6}
                                         >
                                           <Typography>
-                                            Nome: <b>{item.nameOrNumber}</b>
+                                            Nome: <b>{item.habitationName}</b>
                                           </Typography>
                                         </Grid>
                                         <Grid
@@ -985,7 +1016,7 @@ export default function CondoItem() {
                                           <Typography>
                                             Bloco:{" "}
                                             <b>
-                                              {item.blockName !== ""
+                                              {item.blockName
                                                 ? item.blockName
                                                 : "Não informado"}
                                             </b>
@@ -1009,7 +1040,7 @@ export default function CondoItem() {
                                       setShowDeleteHabitationControl(true);
                                       setHabitationToDelete((prev) => ({
                                         ...prev,
-                                        nameOrNumber: item.nameOrNumber,
+                                        habitationName: item.habitationName,
                                         index: index,
                                       }));
                                     }}
@@ -1078,13 +1109,52 @@ export default function CondoItem() {
         }}
       >
         <DialogTitle id="alert-dialog-title">
-          Esta é uma ação irreversível. Tem certeza que deseja excluir o Bloco?
+          Esta é uma ação irreversível. Você está prestes a excluir o bloco e
+          todas as moradias e moradores associadas a ele!
         </DialogTitle>
+
+        <DialogContent>
+          <Typography>
+            Caso não queira excluir as moradias e/ou moradores, acesse a página
+            de cada um e retire o bloco.
+          </Typography>
+        </DialogContent>
 
         <DialogActions>
           <Button
             onClick={() => {
               setShowDeleteBlockControl(false);
+            }}
+            variant="contained"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              setShowSecondBlockQuestion(true);
+              setShowDeleteBlockControl(false);
+            }}
+            autoFocus
+          >
+            Excluir Bloco
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={showSecondBlockQuestion}
+        onClose={() => {
+          setShowSecondBlockQuestion(false);
+        }}
+      >
+        <DialogTitle id="alert-dialog-title">
+          Esta é sua última chance. Tem certeza que quer excluir o bloco e todos
+          as moradias/moradores associados?
+        </DialogTitle>
+
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowSecondBlockQuestion(false);
             }}
             variant="contained"
           >
