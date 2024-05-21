@@ -16,8 +16,10 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import LoagindGridGif from "../../components/DataGridV2/components/assets/loading.gif";
 
 export default function MyCondos() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -34,6 +36,7 @@ export default function MyCondos() {
 
   const initialSetup = async () => {
     try {
+      setLoading(true);
       const controllerResponse = await fetchApi.get(`/contractor/get-condos`, {
         headers: {
           Authorization: context.getToken(),
@@ -58,7 +61,9 @@ export default function MyCondos() {
       if (contractorKeys.data.length > 0) {
         setContractorKeys(contractorKeys.data);
       }
+      setLoading(false);
     } catch (error: any) {
+      setLoading(false);
       console.log(error.message);
     }
   };
@@ -95,88 +100,109 @@ export default function MyCondos() {
       title="Meus Condomínios"
     >
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Paper sx={{ p: 3 }}>
-            <Grid
-              container
-              spacing={3}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                  }}
+        {loading ? (
+          <Grid
+            container
+            spacing={2}
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Box sx={{ marginTop: "20%" }}>
+              <Image
+                src={LoagindGridGif}
+                alt="GIF de carregamento"
+                width={250}
+                height={250}
+                priority
+              />
+            </Box>
+          </Grid>
+        ) : (
+          <>
+            <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+              <Paper sx={{ p: 3 }}>
+                <Grid
+                  container
+                  spacing={3}
+                  alignItems="center"
+                  justifyContent="center"
                 >
-                  <Button
-                    variant="contained"
-                    endIcon={<Home />}
-                    sx={{ fontSize: 17 }}
-                    //no onclick o sistema tem que verificar as chaves do cliente
-                    //e mostrar quais são, com a possiblidade de copiar o valor
-                    //para o clipboard. Caso ele não tenha nenhuma chave, navegar
-                    //para a tela onde ele pode assinar o plano.
-                    onClick={addCondo}
-                  >
-                    Adicionar Condomínio
-                  </Button>
-                </Box>
-              </Grid>
-              {condosArray.length > 0 ? (
-                condosArray.length > 0 &&
-                condosArray.map((item, index) => (
-                  <Grid
-                    item
-                    xs={12}
-                    sm={12}
-                    md={12}
-                    lg={12}
-                    xl={12}
-                    key={index}
-                  >
-                    <Tooltip title="Clique para visualizar o condomínio">
-                      <Link
-                        href={`/condoItem/${item.id}/${item.name}`}
-                        style={{
-                          textDecoration: "none",
-                          color: "#000",
-                        }}
+                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                    <Box
+                      sx={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Button
+                        variant="contained"
+                        endIcon={<Home />}
+                        sx={{ fontSize: 17 }}
+                        //no onclick o sistema tem que verificar as chaves do cliente
+                        //e mostrar quais são, com a possiblidade de copiar o valor
+                        //para o clipboard. Caso ele não tenha nenhuma chave, navegar
+                        //para a tela onde ele pode assinar o plano.
+                        onClick={addCondo}
                       >
-                        <Box
-                          sx={{
-                            border: (theme) =>
-                              `2px solid ${theme.palette.primary.dark}`,
-                            padding: 1,
-                            borderRadius: 2,
-                          }}
-                        >
-                          <Typography sx={{ fontWeight: "bold" }}>
-                            {item.name}
-                          </Typography>
-                          <Typography sx={{ fontWeight: "bold" }}>
-                            {item.street}, {item.streetNumber} - {item.city}-
-                            {item.state}
-                          </Typography>
-                        </Box>
-                      </Link>
-                    </Tooltip>
+                        Adicionar Condomínio
+                      </Button>
+                    </Box>
                   </Grid>
-                ))
-              ) : (
-                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                  <Typography>
-                    Você ainda não cadastrou nenhum condomínio. Clique no botão
-                    acima para começar.
-                  </Typography>
+                  {condosArray.length > 0 ? (
+                    condosArray.length > 0 &&
+                    condosArray.map((item, index) => (
+                      <Grid
+                        item
+                        xs={12}
+                        sm={12}
+                        md={12}
+                        lg={12}
+                        xl={12}
+                        key={index}
+                      >
+                        <Tooltip title="Clique para visualizar o condomínio">
+                          <Link
+                            href={`/condoItem/${item.id}`}
+                            style={{
+                              textDecoration: "none",
+                              color: "#000",
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                border: (theme) =>
+                                  `2px solid ${theme.palette.primary.dark}`,
+                                padding: 1,
+                                borderRadius: 2,
+                              }}
+                            >
+                              <Typography sx={{ fontWeight: "bold" }}>
+                                {item.name}
+                              </Typography>
+                              <Typography sx={{ fontWeight: "bold" }}>
+                                {item.street}, {item.streetNumber} - {item.city}
+                                -{item.state}
+                              </Typography>
+                            </Box>
+                          </Link>
+                        </Tooltip>
+                      </Grid>
+                    ))
+                  ) : (
+                    <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                      <Typography>
+                        Você ainda não cadastrou nenhum condomínio. Clique no
+                        botão acima para começar.
+                      </Typography>
+                    </Grid>
+                  )}
                 </Grid>
-              )}
+              </Paper>
             </Grid>
-          </Paper>
-        </Grid>
+          </>
+        )}
       </Grid>
       <Dialog
         open={showSubscription}

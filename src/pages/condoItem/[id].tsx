@@ -51,11 +51,12 @@ type blockType = {
 
 export default function CondoItem() {
   const router = useRouter();
+  const id = router.query.id;
   const context = useApplicationContext();
-  const params = router.query.params as string[];
-  const condoId = params[0];
-  const condoName = params[1];
+  console.log("router.query", router.query);
 
+  const [loading, setLoading] = useState<boolean>(false);
+  const [condoName, setCondoName] = useState<string>("Aguarde...");
   const [allowEditing, setAllowEditing] = useState<boolean>(false);
 
   const [showBlockModal, setShowBlockModal] = useState<boolean>(false);
@@ -66,7 +67,7 @@ export default function CondoItem() {
   const [selectedBlock, setSelectedBlock] = useState<blockType>({
     id: "0",
     name: "",
-    condominiumId: condoId,
+    condominiumId: id ? id.toString() : "",
   });
 
   const [showHabitationModal, setShowHabitationModal] =
@@ -142,82 +143,103 @@ export default function CondoItem() {
   const [blocksArray, setBlocksArray] = useState<blockType[]>([]);
 
   const initialSetup = async () => {
-    //Buscar no banco os dados do condomínio e os associados(Blocos, Residentes)
-    const controllerResponse = await fetchApi.get(`/condominium/${condoId}`, {
-      headers: {
-        "router-id": "WEB#API",
-        Authorization: context.getToken(),
-      },
-    });
-    console.log("controllerResponse", controllerResponse);
+    try {
+      setLoading(true);
+      //Buscar no banco os dados do condomínio e os associados(Blocos, Residentes)
+      const controllerResponse = await fetchApi.get(
+        `/condominium/${id?.toString()}`,
+        {
+          headers: {
+            "router-id": "WEB#API",
+            Authorization: context.getToken(),
+          },
+        }
+      );
 
-    if (controllerResponse.success) {
-      setCondoItem(controllerResponse.data.condo);
-      setAddress(controllerResponse.data.address);
-      if (controllerResponse.data.blocks.length > 0) {
-        setBlocksArray(controllerResponse.data.blocks);
-        setHabitationsArray(controllerResponse.data.habitations);
+      if (controllerResponse.success) {
+        setCondoName(controllerResponse.data.condo.name);
+        setCondoItem(controllerResponse.data.condo);
+        setAddress(controllerResponse.data.address);
+        if (controllerResponse.data.blocks.length > 0) {
+          setBlocksArray(controllerResponse.data.blocks);
+          setHabitationsArray(controllerResponse.data.habitations);
+        }
       }
-    }
 
-    //Popular o array de estados
-    const statesResponse = await fetchApi.get(`/global/tools/get-all-states`, {
-      headers: {
-        "router-id": "WEB#API",
-        Authorization: context.getToken(),
-      },
-    });
+      //Popular o array de estados
+      const statesResponse = await fetchApi.get(
+        `/global/tools/get-all-states`,
+        {
+          headers: {
+            "router-id": "WEB#API",
+            Authorization: context.getToken(),
+          },
+        }
+      );
 
-    if (statesResponse.success) {
-      setStatesArray(statesResponse.data);
+      if (statesResponse.success) {
+        setStatesArray(statesResponse.data);
+      }
+
+      setLoading(false);
+    } catch (error: any) {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     initialSetup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [id]);
 
-  // const updateCondominium = async () => {
-  //   try {
-  //     const condoObj = {
-  //       id: condoItem.id,
-  //       addressId: condoItem.addressId,
-  //       address: condoItem.street,
-  //       addressNumber: condoItem.streetNumber,
-  //       cep: condoItem.cep,
-  //       cityIbge: condoItem.cityIbge,
-  //       stateIbge: parseInt(selectedState),
-  //       cnpj: condoItem.cnpj,
-  //       complement: condoItem.complement,
-  //       name: condoItem.name,
-  //       neighborhood: condoItem.neighborhood,
-  //       habitations: habitationsArray,
-  //       blocks: blocksArray,
-  //     };
+  const updateCondominium = async () => {
+    try {
+      setLoading(true);
+      const condoObj = {
+        id: condoItem.id,
+        addressId: address.id,
+        address: address.street,
+        addressNumber: address.streetNumber,
+        cep: address.cep,
+        cityIbge: address.cityIbge,
+        stateIbge: parseInt(selectedState),
+        cnpj: condoItem.cnpj,
+        complement: address.complement,
+        name: condoItem.name,
+        neighborhood: address.neighborhood,
+        habitations: habitationsArray,
+        blocks: blocksArray,
+      };
 
-  //     //Fazer update do condomínio
-  //     const controllerResponse = await fetchApi.post(
-  //       `/condominium/update/${condoItem.id}/${condoItem.addressId}`,
-  //       condoObj,
-  //       {
-  //         headers: {
-  //           "router-id": "WEB#API",
-  //           Authorization: context.getToken(),
-  //         },
-  //       }
-  //     );
+      //Fazer update do condomínio
+      const controllerResponse = await fetchApi.post(
+        `/condominium/update/${condoItem.id}`,
+        condoObj,
+        {
+          headers: {
+            "router-id": "WEB#API",
+            Authorization: context.getToken(),
+          },
+        }
+      );
+      console.log("controllerResponse", controllerResponse);
 
-  //     if (controllerResponse.success) {
-  //       setCondoItem(controllerResponse.data.condo);
-  //       if (controllerResponse.data.blocks.length > 0) {
-  //         setBlocksArray(controllerResponse.data.blocks);
-  //       }
-  //     }
-  //   } catch (error: any) {
-  //     console.log(error.message);
-  //   }
-  // };
+      if (controllerResponse.success) {
+        setAlertMessage("Condomínio editado com sucesso.");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+        if (controllerResponse.data.blocks.length > 0) {
+          setBlocksArray(controllerResponse.data.blocks);
+        }
+      }
+      setLoading(false);
+    } catch (error: any) {
+      setLoading(false);
+      console.log(error.message);
+    }
+  };
 
   const handleBlockChange = async (value: string) => {
     if (value === "0") {
@@ -245,6 +267,7 @@ export default function CondoItem() {
 
   const addBlock = async () => {
     try {
+      setLoading(true);
       //Encontrar nome duplicado no array de blocos
       const duplicateName = blocksArray.filter(
         (value) => value.name.toUpperCase() === blockName.toUpperCase()
@@ -266,7 +289,7 @@ export default function CondoItem() {
       setBlockName("");
 
       //Salvar o bloco no Banco
-      const blockObj = { name: blockName, condominiumId: condoId };
+      const blockObj = { name: blockName, condominiumId: id };
       const controllerResponse = await fetchApi.post(`/blocks/new`, blockObj, {
         headers: {
           "router-id": "WEB#API",
@@ -277,16 +300,18 @@ export default function CondoItem() {
       if (controllerResponse.success) {
         initialSetup();
       }
-
+      setLoading(false);
       return;
     } catch (error: any) {
       console.log(error.message);
+      setLoading(false);
       return;
     }
   };
 
   const deleteBlock = async () => {
     try {
+      setLoading(true);
       if (blockToDelete.name !== "") {
         setShowSecondBlockQuestion(false);
         setShowDeleteBlockControl(false);
@@ -319,13 +344,16 @@ export default function CondoItem() {
           }
         }
       }
+      setLoading(false);
     } catch (error: any) {
+      setLoading(false);
       throw new Error(error.message);
     }
   };
 
   const addHabitation = async () => {
     try {
+      setLoading(true);
       //Verificar se o nome foi preenchido
       if (habitation.name === "") {
         setAlertMessage("Por favor, preencha o nome da Moradia.");
@@ -399,21 +427,26 @@ export default function CondoItem() {
       console.log("habitationResponse", habitationResponse);
       setSelectedBlock({ condominiumId: "", id: "0", name: "0" });
       setHabitation({ blockId: "0", name: "" });
+      setLoading(false);
       initialSetup();
     } catch (error: any) {
+      setLoading(false);
       console.log(error.message);
     }
   };
 
   const deleteHabitation = async () => {
     try {
+      setLoading(true);
       setShowDeleteHabitationControl(false);
 
       const temp = [...habitationsArray];
       temp.splice(habitationToDelete.index, 1);
 
       setHabitationsArray(() => temp);
+      setLoading(false);
     } catch (error: any) {
+      setLoading(false);
       console.log(error.message);
     }
   };
@@ -430,17 +463,17 @@ export default function CondoItem() {
 
     if (cepResponse.success) {
       const response = cepResponse.data.data;
-      setCondoItem((prev) => ({ ...prev, street: response.logradouro }));
-      setCondoItem((prev) => ({ ...prev, neighborhood: response.bairro }));
-      setCondoItem((prev) => ({ ...prev, city: response.localidade }));
-      setCondoItem((prev) => ({ ...prev, cityIbge: response.ibge }));
-      setCondoItem((prev) => ({
+      setAddress((prev) => ({ ...prev, street: response.logradouro }));
+      setAddress((prev) => ({ ...prev, neighborhood: response.bairro }));
+      setAddress((prev) => ({ ...prev, city: response.localidade }));
+      setAddress((prev) => ({ ...prev, cityIbge: response.ibge }));
+      setAddress((prev) => ({
         ...prev,
         state: response.ibge ? response.ibge.substring(0, 2) : "0",
       }));
       setSelectedState(response.ibge ? response.ibge.substring(0, 2) : "0");
     } else {
-      setCondoItem((prev) => ({ ...prev, cityIbge: null }));
+      setAddress((prev) => ({ ...prev, cityIbge: null }));
     }
   };
 
@@ -458,9 +491,9 @@ export default function CondoItem() {
           href: "/myCondos",
         },
         {
-          text: `${condoName}`,
+          text: `${condoItem.name}`,
           iconName: "home",
-          href: `/condoItem/${condoId}/${condoName}`,
+          href: `/condoItem/${condoItem.id}`,
         },
       ]}
       alerMessage={alertMessage}
@@ -468,11 +501,13 @@ export default function CondoItem() {
       closeAlert={() => {
         setShowAlert(false);
       }}
+      loading={loading}
     >
       <Grid container spacing={2}>
+        {JSON.stringify(id)}
+        {JSON.stringify(condoName)}
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
-            {JSON.stringify(blockToDelete)}
             <Grid
               container
               spacing={2}
@@ -538,7 +573,7 @@ export default function CondoItem() {
                       variant="outlined"
                       label="CNPJ do Condomínio"
                       InputLabelProps={{ shrink: true }}
-                      value={condoItem.cnpj}
+                      value={condoItem.cnpj ? cnpjMask(condoItem.cnpj) : ""}
                       fullWidth
                       inputProps={{ readOnly: !allowEditing }}
                       onChange={(
@@ -712,7 +747,7 @@ export default function CondoItem() {
                       startIcon={<Save />}
                       type="submit"
                       onClick={() => {
-                        // updateCondominium();
+                        updateCondominium();
                       }}
                     >
                       Salvar
@@ -775,7 +810,7 @@ export default function CondoItem() {
                       startIcon={<Save />}
                       type="submit"
                       onClick={() => {
-                        // updateCondominium();
+                        updateCondominium();
                       }}
                     >
                       Salvar
@@ -827,7 +862,7 @@ export default function CondoItem() {
                 </Grid>
                 {blocksArray.length > 0 &&
                   blocksArray.map((item, index) => {
-                    const url = `/blockItem/${condoName}/${item.id}/${item.name}`;
+                    const url = `/blockItem/${item.id}`;
                     return (
                       <Grid
                         item
@@ -944,7 +979,7 @@ export default function CondoItem() {
                   {habitationsArray &&
                     habitationsArray.length > 0 &&
                     habitationsArray.map((item, index) => {
-                      const url = `/habitationItem/${condoName}/${item.blockName}/${item.habitationId}/${item.habitationName}`;
+                      const url = `/habitationItem/${item.habitationId}`;
                       return (
                         <Grid
                           item

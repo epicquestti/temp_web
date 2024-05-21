@@ -35,10 +35,6 @@ export default function BlockItem() {
 
   const [habitationName, setHabitationName] = useState<string>("");
 
-  const [block, setBlock] = useState<{ id: string; name: string }>({
-    id: "",
-    name: "",
-  });
   const [habitationsArray, setHabitationsArray] = useState<
     {
       id: string;
@@ -46,15 +42,23 @@ export default function BlockItem() {
     }[]
   >([]);
 
+  const [blockState, setBlockState] = useState<{ id: string; name: string }>({
+    id: "",
+    name: "",
+  });
+
+  const [condominium, setCondominium] = useState<{ id: string; name: string }>({
+    id: "",
+    name: "",
+  });
+
   const router = useRouter();
-  const params = router.query.params as string[];
-  const condoName = params[0];
-  const blockId = params[1];
-  const name = params[2];
   const context = useApplicationContext();
 
+  const id = router.query.id;
+
   const initialSetup = async () => {
-    const controllerResponse = await fetchApi.get(`/blocks/${blockId}`, {
+    const controllerResponse = await fetchApi.get(`/blocks/${id}`, {
       headers: {
         "router-id": "WEB#API",
         Authorization: context.getToken(),
@@ -62,8 +66,9 @@ export default function BlockItem() {
     });
 
     if (controllerResponse.success) {
-      setBlock(controllerResponse.data.block);
+      setBlockState(controllerResponse.data.block);
       setHabitationsArray(controllerResponse.data.habitations);
+      setCondominium(controllerResponse.data.condominium);
     }
 
     console.log("controllerResponse", controllerResponse);
@@ -72,7 +77,7 @@ export default function BlockItem() {
   useEffect(() => {
     initialSetup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [id]);
 
   const addHabitation = async () => {
     try {
@@ -144,14 +149,14 @@ export default function BlockItem() {
           href: "/myCondos",
         },
         {
-          text: `${condoName}`,
+          text: `${condominium.name}`,
           iconName: "home",
-          href: `/condoItem/${condoName}`,
+          href: `/condoItem/${condominium.id}`,
         },
         {
-          text: `${name}`,
+          text: `${blockState.name}`,
           iconName: "apartment",
-          href: `/condoItem/${name}`,
+          href: `/blockItem/${blockState.id}`,
         },
       ]}
       loading={loading}
@@ -210,7 +215,7 @@ export default function BlockItem() {
                       variant="outlined"
                       label="Nome do Bloco"
                       InputLabelProps={{ shrink: true }}
-                      value={block.name}
+                      value={blockState.name}
                       inputProps={{ readOnly: !allowEditing }}
                       fullWidth
                     />
@@ -237,12 +242,12 @@ export default function BlockItem() {
                 <>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Nome: <b>{block.name}</b>
+                      Nome: <b>{blockState.name}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Condomínio: <b>{condoName}</b>
+                      Condomínio: <b>{condominium.name}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
@@ -269,8 +274,6 @@ export default function BlockItem() {
         </Grid>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
-            {JSON.stringify(habitationsArray)}
-            {JSON.stringify(habitationName)}
             <Grid
               container
               spacing={2}
@@ -310,7 +313,6 @@ export default function BlockItem() {
                 </Grid>
                 {habitationsArray.length > 0 &&
                   habitationsArray.map((item, index) => {
-                    const url = `/habitationItem/${condoName}/${block.name}/${item.id}/${item.nameOrNumber}`;
                     return (
                       <Grid
                         item
@@ -338,7 +340,7 @@ export default function BlockItem() {
                           >
                             <Grid item xs={12} sm={12} md={11} lg={11} xl={11}>
                               <Link
-                                href={url}
+                                href={""}
                                 style={{
                                   textDecoration: "none",
                                   color: "#000",
