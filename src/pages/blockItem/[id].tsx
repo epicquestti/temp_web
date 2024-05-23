@@ -19,7 +19,7 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 
 export default function BlockItem() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -31,14 +31,28 @@ export default function BlockItem() {
     useState<boolean>(false);
   const [showDeleteHabitationControl, setShowDeleteHabitationControl] =
     useState<boolean>(false);
-  const [habitationToDelete, setHabitationToDelete] = useState<string>("");
+  const [habitationToDelete, setHabitationToDelete] = useState<{
+    habitationId: string;
+    habitationName: string;
+    index: number | null;
+  }>({
+    habitationName: "",
+    index: null,
+    habitationId: "",
+  });
 
-  const [habitationName, setHabitationName] = useState<string>("");
+  const [habitation, setHabitation] = useState<{
+    habitationId: string;
+    habitationName: string;
+  }>({
+    habitationId: "",
+    habitationName: "",
+  });
 
   const [habitationsArray, setHabitationsArray] = useState<
     {
-      id: string;
-      nameOrNumber: string;
+      habitationId: string;
+      habitationName: string;
     }[]
   >([]);
 
@@ -65,13 +79,13 @@ export default function BlockItem() {
       },
     });
 
+    console.log("controllerResponse", controllerResponse);
+
     if (controllerResponse.success) {
       setBlockState(controllerResponse.data.block);
       setHabitationsArray(controllerResponse.data.habitations);
       setCondominium(controllerResponse.data.condominium);
     }
-
-    console.log("controllerResponse", controllerResponse);
   };
 
   useEffect(() => {
@@ -81,45 +95,94 @@ export default function BlockItem() {
 
   const addHabitation = async () => {
     try {
-      if (habitationName === "") {
-        setAlertMessage("Por favor preencha o nome da habitação.");
-        setShowAlert(true);
-      }
-
-      const duplicate = habitationsArray.filter(
-        (value) =>
-          value.nameOrNumber.toUpperCase() === habitationName.toUpperCase()
-      );
-      console.log("duplicate", duplicate);
-
-      if (duplicate.length > 0) {
-        setHabitationName("");
-        setAlertMessage(
-          "Já existe uma habitação com esse nome cadastrada neste bloco."
-        );
+      setLoading(true);
+      setShowHabitationModal(false);
+      //Verificar se o nome foi preenchido
+      if (habitation.habitationName === "") {
+        setAlertMessage("Por favor, preencha o nome da Moradia.");
         setShowAlert(true);
         setTimeout(() => {
           setShowAlert(false);
         }, 3000);
+        setLoading(false);
         return;
       }
 
-      const temp = [...habitationsArray];
-      temp.push({ id: "", nameOrNumber: habitationName });
+      //Encontrar nome duplicado sem bloco
+      const duplicateName = habitationsArray.filter(
+        (value) =>
+          value.habitationName.toUpperCase() ===
+          habitation.habitationName.toUpperCase()
+      );
+
+      if (duplicateName.length > 0) {
+        setAlertMessage("Nome da moradia já cadastrada neste bloco.");
+        setShowAlert(true);
+        setShowHabitationModal(false);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+        setHabitation((prev) => ({
+          ...prev,
+          habitationId: "",
+          habitationName: "",
+        }));
+        setLoading(false);
+        return;
+      }
+
+      //Adicionar a habitação ao array de habitações
+      let temp = [...habitationsArray];
+      temp.push({
+        habitationId: "",
+        habitationName: habitation.habitationName,
+      });
       setHabitationsArray(() => temp);
-      setHabitationName("");
-      setShowHabitationModal(false);
+
+      //Salvar a Habitação nova no banco
+      const habitationObj = {
+        blockId: blockState.id,
+        condominiumId: condominium.id,
+        name: habitation.habitationName,
+      };
+
+      const habitationResponse = await fetchApi.post(
+        `/habitations/new`,
+        habitationObj,
+        {
+          headers: {
+            "router-id": "WEB#API",
+            Authorization: context.getToken(),
+          },
+        }
+      );
+      if (habitationResponse.success) {
+        setAlertMessage("Moradia inserida com sucesso.");
+        setShowAlert(true);
+        setHabitation((prev) => ({
+          ...prev,
+          habitationId: "",
+          habitationName: "",
+        }));
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+      }
+      setLoading(false);
+      initialSetup();
     } catch (error: any) {
+      setLoading(false);
       console.log(error.message);
     }
   };
 
   const deleteHabitation = async () => {
     try {
-      if (habitationToDelete !== "") {
+      setLoading(true);
+      if (habitationToDelete.habitationName !== "") {
         setShowDeleteHabitationControl(false);
         const itemIndex = habitationsArray.findIndex(
-          (value) => value.nameOrNumber === habitationToDelete
+          (value) => value.habitationName === habitationToDelete.habitationName
         );
 
         if (itemIndex !== -1) {
@@ -127,11 +190,114 @@ export default function BlockItem() {
           temp.splice(itemIndex, 1);
           setHabitationsArray(() => temp);
         }
+
+        const deleteResponse = await fetchApi.del(
+          `/habitations/delete/${habitationToDelete.habitationId}`,
+          {
+            headers: {
+              "router-id": "WEB#API",
+              Authorization: context.getToken(),
+            },
+          }
+        );
+
+        if (deleteResponse.success) {
+          setAlertMessage("Moradia excluída com sucesso.");
+          setShowAlert(true);
+          setLoading(false);
+          setTimeout(() => {
+            setShowAlert(false);
+          }, 3000);
+          await initialSetup();
+        }
+      } else {
+        setLoading(false);
+        return;
+      }
+    } catch (error: any) {
+      setLoading(false);
+      throw new Error(error.message);
+    }
+  };
+
+  const updateBlock = async () => {
+    try {
+      setLoading(true);
+
+      //Verificar se o nome do bloco está vazio.
+      if (blockState.name === "") {
+        setAlertMessage("Por favor, insira o nome do bloco antes de salvar.");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
       }
 
-      //Fazer update do condomínio assim que excluir o bloco
+      //Verificar se o nome do bloco já existe no condomínio.
+      const nameResponse = await fetchApi.post(
+        `/condominium/get-block-name`,
+        {
+          id: condominium.id,
+          name: blockState.name,
+        },
+        {
+          headers: {
+            "router-id": "WEB#API",
+            Authorization: context.getToken(),
+          },
+        }
+      );
+
+      if (nameResponse.data) {
+        setAlertMessage("Nome do bloco já cadastrado nesse condomínio.");
+        setShowAlert(true);
+        setLoading(false);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+        setBlockState((prev) => ({ ...prev, name: "", id: "" }));
+        return;
+      }
+
+      const blockObj = {
+        condominiumId: condominium.id,
+        name: blockState.name,
+      };
+
+      const updateResponse = await fetchApi.post(
+        `blocks/update/${blockState.id}`,
+        blockObj,
+        {
+          headers: {
+            "router-id": "WEB#API",
+            Authorization: context.getToken(),
+          },
+        }
+      );
+
+      if (updateResponse.success) {
+        setAlertMessage("Bloco editado com sucesso.");
+        setShowAlert(true);
+        setLoading(false);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+        setBlockState((prev) => ({ ...prev, name: "", id: "" }));
+        setAllowEditing(false);
+        await initialSetup();
+        return;
+      } else {
+        setAlertMessage("Erro ao editar bloco. Por favor, tente novamente.");
+        setShowAlert(true);
+        setLoading(false);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+        setBlockState((prev) => ({ ...prev, name: "", id: "" }));
+        return;
+      }
     } catch (error: any) {
-      throw new Error(error.message);
+      console.log(error.message);
     }
   };
 
@@ -170,6 +336,7 @@ export default function BlockItem() {
       <Grid container spacing={2}>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
+            {JSON.stringify(blockState)}
             <Grid
               container
               spacing={2}
@@ -210,11 +377,18 @@ export default function BlockItem() {
               </Grid>
               {allowEditing ? (
                 <>
+                  {JSON.stringify(blockState)}
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <TextField
                       variant="outlined"
                       label="Nome do Bloco"
                       InputLabelProps={{ shrink: true }}
+                      onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                        setBlockState((prev) => ({
+                          ...prev,
+                          name: event?.target.value,
+                        }));
+                      }}
                       value={blockState.name}
                       inputProps={{ readOnly: !allowEditing }}
                       fullWidth
@@ -226,15 +400,9 @@ export default function BlockItem() {
                       variant="contained"
                       startIcon={<Save />}
                       type="submit"
-                      onClick={() => {
-                        if (!allowEditing) {
-                          return;
-                        } else {
-                          console.log("Botão Funcionando");
-                        }
-                      }}
+                      onClick={() => updateBlock()}
                     >
-                      {allowEditing ? "Salvar" : "Salvar (Desativado)"}
+                      Salvar
                     </Button>
                   </Grid>
                 </>
@@ -257,14 +425,10 @@ export default function BlockItem() {
                       startIcon={<Save />}
                       type="submit"
                       onClick={() => {
-                        if (!allowEditing) {
-                          return;
-                        } else {
-                          console.log("Botão Funcionando");
-                        }
+                        updateBlock();
                       }}
                     >
-                      {allowEditing ? "Salvar" : "Salvar (Desativado)"}
+                      Salvar
                     </Button>
                   </Grid>
                 </>
@@ -313,6 +477,7 @@ export default function BlockItem() {
                 </Grid>
                 {habitationsArray.length > 0 &&
                   habitationsArray.map((item, index) => {
+                    const url = `habitationItem/${item.habitationId}`;
                     return (
                       <Grid
                         item
@@ -340,7 +505,7 @@ export default function BlockItem() {
                           >
                             <Grid item xs={12} sm={12} md={11} lg={11} xl={11}>
                               <Link
-                                href={""}
+                                href={url}
                                 style={{
                                   textDecoration: "none",
                                   color: "#000",
@@ -348,7 +513,7 @@ export default function BlockItem() {
                               >
                                 <Tooltip title="Clique para visualizar a habitação">
                                   <Typography>
-                                    Nome: <b>{item.nameOrNumber}</b>
+                                    Nome: <b>{item.habitationName}</b>
                                   </Typography>
                                 </Tooltip>
                               </Link>
@@ -363,7 +528,14 @@ export default function BlockItem() {
                                 }}
                                 onClick={() => {
                                   setShowDeleteHabitationControl(true);
-                                  setHabitationToDelete(item.nameOrNumber);
+                                  setHabitationToDelete((prev) => ({
+                                    ...prev,
+                                    habitationName: item.habitationName,
+                                    habitationId: item.habitationId
+                                      ? item.habitationId
+                                      : "",
+                                    index: index,
+                                  }));
                                 }}
                               >
                                 <DeleteForever />
@@ -386,15 +558,28 @@ export default function BlockItem() {
         }}
       >
         <DialogTitle id="alert-dialog-title">
-          Adicionar Habitação ao Bloco
+          Adicionar Moradia ao Bloco
         </DialogTitle>
         <DialogContent>
-          {/* <HabitationModal
-            name={habitationName}
-            setName={(value: string) => {
-              setHabitationName(value);
-            }}
-          /> */}
+          <Grid
+            container
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+              <TextField
+                fullWidth
+                placeholder="Nome da Moradia"
+                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                  setHabitation((prev) => ({
+                    ...prev,
+                    habitationName: event.target.value,
+                  }));
+                }}
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button
@@ -411,7 +596,7 @@ export default function BlockItem() {
             variant="contained"
             autoFocus
           >
-            Adicionar Habitação
+            Adicionar Moradia
           </Button>
         </DialogActions>
       </Dialog>
@@ -423,7 +608,7 @@ export default function BlockItem() {
       >
         <DialogTitle id="alert-dialog-title">
           Esta é uma ação irreversível. Tem certeza que deseja excluir a
-          Habitação?
+          moradia?
         </DialogTitle>
 
         <DialogActions>
@@ -441,7 +626,7 @@ export default function BlockItem() {
             }}
             autoFocus
           >
-            Excluir Habitação
+            Excluir Moradia
           </Button>
         </DialogActions>
       </Dialog>

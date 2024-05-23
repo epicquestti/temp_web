@@ -30,11 +30,11 @@ export default function HabitationItem() {
   const [alertMessage, setAlertMessage] = useState<string>("");
 
   const [habitation, setHabitation] = useState<{
-    id: string;
-    nameOrNumber: string;
+    habitationId: string;
+    habitationName: string;
   }>({
-    id: "",
-    nameOrNumber: "",
+    habitationId: "",
+    habitationName: "",
   });
 
   const [showResidentModal, setShowResidentModal] = useState<boolean>(false);
@@ -54,36 +54,51 @@ export default function HabitationItem() {
     isEmployeeChange: () => {},
     isPropertyOwnerChange: () => {},
   });
-
   const [residentsArray, setResidentsArray] = useState<residentTypeProps[]>([]);
   const [residentToDelete, setResidentToDelete] = useState<string>("");
 
+  const [block, setBlock] = useState<{ blockId: string; blockName: string }>({
+    blockId: "",
+    blockName: "",
+  });
+  const [condo, setCondo] = useState<{ condoId: string; condoName: string }>({
+    condoId: "",
+    condoName: "",
+  });
+
   const router = useRouter();
-  const params = router.query.params as string[];
-  const condoName = params[0];
-  const blockName = params[1];
-  const habitationId = params[2];
-  const habitationName = params[3];
+  const id = router.query.id;
+
   const context = useApplicationContext();
 
   const initialSetup = async () => {
-    const controllerResponse = await fetchApi.get(
-      `/habitations/${habitationId}`,
-      {
-        headers: {
-          "router-id": "WEB#API",
-          Authorization: context.getToken(),
-        },
-      }
-    );
+    const controllerResponse = await fetchApi.get(`/habitations/${id}`, {
+      headers: {
+        "router-id": "WEB#API",
+        Authorization: context.getToken(),
+      },
+    });
+
+    console.log("controllerResponse", controllerResponse);
 
     if (controllerResponse.success) {
+      const data = controllerResponse.data;
       setHabitation({
-        id: controllerResponse.data.habitation.id,
-        nameOrNumber: controllerResponse.data.habitation.nameOrNumber,
+        habitationId: data.habitation[0].habitationId,
+        habitationName: data.habitation[0].habitationName,
       });
+      setCondo((prev) => ({
+        ...prev,
+        condoId: data.habitation[0].condominiumId,
+        condoName: data.habitation[0].condominiumName,
+      }));
+      setBlock((prev) => ({
+        ...prev,
+        blockId: data.habitation[0].blockId,
+        blockName: data.habitation[0].blockName,
+      }));
       if (controllerResponse.data.residents.length > 0) {
-        setResidentsArray(controllerResponse.data.residents);
+        setResidentsArray(data.residents);
       }
     }
 
@@ -93,7 +108,7 @@ export default function HabitationItem() {
   useEffect(() => {
     initialSetup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [id]);
 
   const validateAndAlert = (condition: boolean, message: string): boolean => {
     if (condition) {
@@ -163,14 +178,14 @@ export default function HabitationItem() {
   const updateHabitation = async () => {
     try {
       const habitationObj = {
-        id: habitation.id,
-        nameOrNumber: habitation.nameOrNumber,
+        id: habitation.habitationId,
+        nameOrNumber: habitation.habitationName,
         residents: residentsArray,
       };
 
       //Fazer update da habitação com os moradores a cada vez que o usuário deletar um valor
       const controllerResponse = await fetchApi.post(
-        `/habitations/update/${habitation.id}`,
+        `/habitations/update/${habitation.habitationId}`,
         habitationObj,
 
         {
@@ -232,19 +247,25 @@ export default function HabitationItem() {
           href: "/condominium",
         },
         {
-          text: `${condoName}`,
+          text: `${condo.condoName}`,
           iconName: "home_work",
-          href: "/myCondos",
+          href: `/condoItem/${condo.condoId}`,
         },
         {
-          text: `${blockName}`,
+          text:
+            block.blockId !== "" && block.blockId !== null
+              ? `${block.blockName}`
+              : "Bloco não Informado",
           iconName: "apartment",
-          href: "/blocks",
+          href:
+            block.blockId !== "" && block.blockId !== null
+              ? `/blockItem/${block.blockId}`
+              : `/habitationItem/${habitation.habitationId}`,
         },
         {
-          text: `${habitationName}`,
+          text: `${habitation.habitationName}`,
           iconName: "home",
-          href: "/habitations",
+          href: `/habitationItem/${habitation.habitationId}`,
         },
       ]}
       loading={loading}
@@ -274,7 +295,6 @@ export default function HabitationItem() {
                   }}
                 >
                   <Typography variant="h4">Dados da Habitação</Typography>
-                  {JSON.stringify(residentToDelete)}
                 </Box>
               </Grid>
               <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
@@ -304,7 +324,7 @@ export default function HabitationItem() {
                       variant="outlined"
                       label="Nome da Moradia"
                       InputLabelProps={{ shrink: true }}
-                      value={habitation.nameOrNumber}
+                      value={habitation.habitationName}
                       inputProps={{ readOnly: !allowEditing }}
                       fullWidth
                       onChange={(
@@ -314,7 +334,7 @@ export default function HabitationItem() {
                       ) => {
                         setHabitation((prev) => ({
                           ...prev,
-                          nameOrNumber: event.target.value,
+                          habitationName: event.target.value,
                         }));
                       }}
                     />
@@ -324,17 +344,20 @@ export default function HabitationItem() {
                 <Fragment>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Nome: <b>{habitation.nameOrNumber}</b>
+                      Nome: <b>{habitation.habitationName}</b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
                     <Typography>
-                      Bloco: <b>{blockName}</b>
+                      Bloco:{" "}
+                      <b>
+                        {block.blockName ? block.blockName : "Não informado"}
+                      </b>
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     <Typography>
-                      Condomínio: <b>{condoName}</b>
+                      Condomínio: <b>{condo.condoName}</b>
                     </Typography>
                   </Grid>
                 </Fragment>

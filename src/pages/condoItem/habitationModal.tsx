@@ -13,7 +13,6 @@ type habitationModalProps = {
   name: string;
   selectedBlock: { id: string; name: string };
   setName: (name: string) => void;
-  onOpen: () => any;
   onBlockChange: (value: string) => void;
   blocksArray: any[];
 };
@@ -40,7 +39,6 @@ export default function HabitationModal(props: habitationModalProps) {
             <FormControl fullWidth>
               <Select
                 id="demo-controlled-open-select"
-                onOpen={props.onOpen}
                 value={props.selectedBlock.id}
                 label="Bloco"
                 onChange={(event: SelectChangeEvent<string>) => {

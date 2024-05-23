@@ -53,7 +53,6 @@ export default function CondoItem() {
   const router = useRouter();
   const id = router.query.id;
   const context = useApplicationContext();
-  console.log("router.query", router.query);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [condoName, setCondoName] = useState<string>("Aguarde...");
@@ -222,7 +221,6 @@ export default function CondoItem() {
           },
         }
       );
-      console.log("controllerResponse", controllerResponse);
 
       if (controllerResponse.success) {
         setAlertMessage("Condomínio editado com sucesso.");
@@ -328,20 +326,32 @@ export default function CondoItem() {
           setBlocksArray(() => temp);
         }
 
-        if (blockToDelete.id) {
-          const controllerResponse = await fetchApi.del(
-            `blocks/delete/${blockToDelete.id}/${condoItem.id}`,
-            {
-              headers: {
-                "router-id": "WEB#API",
-                Authorization: context.getToken(),
-              },
-            }
-          );
-
-          if (controllerResponse.success) {
-            initialSetup();
+        const controllerResponse = await fetchApi.del(
+          `blocks/delete/${blockToDelete.id}/${condoItem.id}`,
+          {
+            headers: {
+              "router-id": "WEB#API",
+              Authorization: context.getToken(),
+            },
           }
+        );
+
+        if (controllerResponse.success) {
+          setAlertMessage("Bloco excluído com sucesso.");
+          setShowAlert(true);
+          setLoading(false);
+          setTimeout(() => {
+            setShowAlert(false);
+          }, 3000);
+          await initialSetup();
+          return;
+        } else {
+          setAlertMessage("Erro ao excluir Bloco.");
+          setShowAlert(true);
+          setLoading(false);
+          setTimeout(() => {
+            setShowAlert(false);
+          }, 3000);
         }
       }
       setLoading(false);
@@ -424,7 +434,6 @@ export default function CondoItem() {
           },
         }
       );
-      console.log("habitationResponse", habitationResponse);
       setSelectedBlock({ condominiumId: "", id: "0", name: "0" });
       setHabitation({ blockId: "0", name: "" });
       setLoading(false);
@@ -444,6 +453,9 @@ export default function CondoItem() {
       temp.splice(habitationToDelete.index, 1);
 
       setHabitationsArray(() => temp);
+
+      //Fazer update das moradias caso a moradia excluída tenha ID
+
       setLoading(false);
     } catch (error: any) {
       setLoading(false);
@@ -458,8 +470,6 @@ export default function CondoItem() {
         "router-id": "WEB#API",
       },
     });
-
-    console.log("cepResponse", cepResponse);
 
     if (cepResponse.success) {
       const response = cepResponse.data.data;
@@ -504,8 +514,6 @@ export default function CondoItem() {
       loading={loading}
     >
       <Grid container spacing={2}>
-        {JSON.stringify(id)}
-        {JSON.stringify(condoName)}
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
             <Grid
@@ -718,8 +726,6 @@ export default function CondoItem() {
                         inputProps={{ readOnly: !allowEditing }}
                         value={address.stateIbge}
                         onChange={(event: SelectChangeEvent) => {
-                          console.log(event.target.value);
-
                           setSelectedState(() => event.target.value.toString());
                         }}
                       >
@@ -860,6 +866,7 @@ export default function CondoItem() {
                     </Tooltip>
                   </Grid>
                 </Grid>
+                {JSON.stringify(blocksArray)}
                 {blocksArray.length > 0 &&
                   blocksArray.map((item, index) => {
                     const url = `/blockItem/${item.id}`;
@@ -889,25 +896,19 @@ export default function CondoItem() {
                             justifyContent="center"
                           >
                             <Grid item xs={12} sm={12} md={11} lg={11} xl={11}>
-                              {item.id ? (
-                                <Link
-                                  href={url}
-                                  style={{
-                                    textDecoration: "none",
-                                    color: "#000",
-                                  }}
-                                >
-                                  <Tooltip title="Clique para visualizar o bloco">
-                                    <Typography>
-                                      Nome: <b>{item.name}</b>
-                                    </Typography>
-                                  </Tooltip>
-                                </Link>
-                              ) : (
-                                <Typography>
-                                  Nome: <b>{item.name}</b>
-                                </Typography>
-                              )}
+                              <Link
+                                href={url}
+                                style={{
+                                  textDecoration: "none",
+                                  color: "#000",
+                                }}
+                              >
+                                <Tooltip title="Clique para visualizar o bloco">
+                                  <Typography>
+                                    Nome: <b>{item.name}</b>
+                                  </Typography>
+                                </Tooltip>
+                              </Link>
                             </Grid>
 
                             <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
@@ -1219,7 +1220,6 @@ export default function CondoItem() {
             name={habitation.name}
             selectedBlock={selectedBlock}
             blocksArray={blocksArray}
-            onOpen={() => console.log("ajsbdahsvd")}
             setName={(name: string) => {
               setHabitation((prev) => ({ ...prev, name }));
             }}
