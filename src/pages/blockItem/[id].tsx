@@ -477,7 +477,7 @@ export default function BlockItem() {
                 </Grid>
                 {habitationsArray.length > 0 &&
                   habitationsArray.map((item, index) => {
-                    const url = `habitationItem/${item.habitationId}`;
+                    const url = `/habitationItem/${item.habitationId}`;
                     return (
                       <Grid
                         item

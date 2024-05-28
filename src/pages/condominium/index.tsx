@@ -430,7 +430,6 @@ export default function Condominium() {
       <Grid container spacing={2}>
         <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Paper sx={{ p: 3 }}>
-            {JSON.stringify(blocksArray)}
             <Grid
               container
               spacing={3}

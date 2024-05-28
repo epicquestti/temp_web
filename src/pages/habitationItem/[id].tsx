@@ -1,7 +1,7 @@
 import ViewWrapper from "@/components/ViewWrapper";
 import { useApplicationContext } from "@/context/ApplicationContext";
 import fetchApi from "@/lib/fetchApi";
-import { cpfMask, phoneMask } from "@/lib/masks";
+import { cpfMask, noSpecialCharactersMask, phoneMask } from "@/lib/masks";
 import { Add, DeleteForever, Edit, Save } from "@mui/icons-material";
 import {
   Box,
@@ -11,9 +11,14 @@ import {
   DialogContent,
   DialogTitle,
   Fab,
+  FormControl,
   Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
+  SelectChangeEvent,
   TextField,
   Tooltip,
   Typography,
@@ -55,12 +60,22 @@ export default function HabitationItem() {
     isPropertyOwnerChange: () => {},
   });
   const [residentsArray, setResidentsArray] = useState<residentTypeProps[]>([]);
-  const [residentToDelete, setResidentToDelete] = useState<string>("");
+  const [residentToDelete, setResidentToDelete] = useState<{
+    id: string;
+    cpf: string;
+  }>({
+    id: "",
+    cpf: "",
+  });
 
   const [block, setBlock] = useState<{ blockId: string; blockName: string }>({
     blockId: "",
     blockName: "",
   });
+  const [blocksArray, setBlocksArray] = useState<
+    { id: string; name: string }[]
+  >([]);
+
   const [condo, setCondo] = useState<{ condoId: string; condoName: string }>({
     condoId: "",
     condoName: "",
@@ -78,8 +93,6 @@ export default function HabitationItem() {
         Authorization: context.getToken(),
       },
     });
-
-    console.log("controllerResponse", controllerResponse);
 
     if (controllerResponse.success) {
       const data = controllerResponse.data;
@@ -100,9 +113,21 @@ export default function HabitationItem() {
       if (controllerResponse.data.residents.length > 0) {
         setResidentsArray(data.residents);
       }
-    }
 
-    console.log("controllerResponse", controllerResponse);
+      const allBlocks = await fetchApi.get(
+        `/blocks/get-blocks/${controllerResponse.data.habitation[0].condominiumId}`,
+        {
+          headers: {
+            "router-id": "WEB#API",
+            Authorization: context.getToken(),
+          },
+        }
+      );
+
+      if (allBlocks.success) {
+        setBlocksArray(allBlocks.data);
+      }
+    }
   };
 
   useEffect(() => {
@@ -123,6 +148,55 @@ export default function HabitationItem() {
     return false;
   };
 
+  const updateHabitation = async () => {
+    try {
+      setLoading(true);
+      //Verificar se já existe uma habitação com o mesmo nome cadastrado no
+      //condomínio ou no bloco
+      const existingBlock =
+        block.blockId === "0" || block.blockId === null ? null : block.blockId;
+
+      const habitationObj = {
+        id: habitation.habitationId,
+        nameOrNumber: habitation.habitationName,
+        blockId: existingBlock,
+        residents: residentsArray,
+        condoId: condo.condoId,
+      };
+
+      //Fazer update da habitação com os moradores a cada vez que o usuário deletar um valor
+      const controllerResponse = await fetchApi.post(
+        `/habitations/update/${habitation.habitationId}`,
+        habitationObj,
+        {
+          headers: {
+            "router-id": "WEB#API",
+            Authorization: context.getToken(),
+          },
+        }
+      );
+
+      if (controllerResponse.success) {
+        setLoading(false);
+        setAlertMessage("Moradia editada com sucesso.");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+      }
+
+      console.log("controllerResponse", controllerResponse);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      setAlertMessage("Erro ao editar Moradia");
+      setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 3000);
+    }
+  };
+
   const clearResident = () => {
     setResident({
       id: "",
@@ -141,53 +215,55 @@ export default function HabitationItem() {
   };
 
   const addResident = async () => {
-    if (
-      validateAndAlert(
-        resident.name === "",
-        "Por favor, preencha o nome do morador"
-      ) ||
-      validateAndAlert(
-        resident.cpf === "",
-        "Por favor, preencha o CPF do morador"
-      ) ||
-      validateAndAlert(
-        resident.phone === "",
-        "Por favor, preencha o Telefone do morador"
-      )
-    ) {
-      return;
-    }
-
-    const existingResident = residentsArray.find(
-      (value) => value.cpf === resident.cpf
-    );
-
-    if (existingResident) {
-      setShowAlert(true);
-      setAlertMessage("Já existe um morador cadastrado com este CPF.");
-      return;
-    }
-
-    const updateResponse = await fetchApi.post(``);
-
-    residentsArray.push(resident);
-    clearResident();
-    setShowResidentModal(false);
-  };
-
-  const updateHabitation = async () => {
     try {
-      const habitationObj = {
-        id: habitation.habitationId,
-        nameOrNumber: habitation.habitationName,
-        residents: residentsArray,
+      setLoading(true);
+      setShowResidentModal(false);
+
+      if (
+        validateAndAlert(
+          resident.name === "",
+          "Por favor, preencha o nome do morador"
+        ) ||
+        validateAndAlert(
+          resident.cpf === "",
+          "Por favor, preencha o CPF do morador"
+        ) ||
+        validateAndAlert(
+          resident.phone === "",
+          "Por favor, preencha o Telefone do morador"
+        )
+      ) {
+        return;
+      }
+
+      const existingResident = residentsArray.find(
+        (value) => value.cpf === resident.cpf
+      );
+
+      if (existingResident) {
+        setShowAlert(true);
+        setAlertMessage("Já existe um morador cadastrado com este CPF.");
+        return;
+      }
+
+      const existingBlock =
+        block.blockId === "0" || block.blockId === null ? null : block.blockId;
+
+      const residentObj = {
+        condoId: condo.condoId,
+        blockId: existingBlock,
+        name: resident.name,
+        cpf: noSpecialCharactersMask(resident.cpf),
+        phone: noSpecialCharactersMask(resident.phone),
+        email: resident.email,
+        isPropertyOwner: resident.isPropertyOwner,
+        isEmployee: resident.isEmployee,
+        habitationId: habitation.habitationId,
       };
 
-      //Fazer update da habitação com os moradores a cada vez que o usuário deletar um valor
-      const controllerResponse = await fetchApi.post(
-        `/habitations/update/${habitation.habitationId}`,
-        habitationObj,
-
+      const residentResponse = await fetchApi.post(
+        `/residents/new`,
+        residentObj,
         {
           headers: {
             "router-id": "WEB#API",
@@ -196,34 +272,60 @@ export default function HabitationItem() {
         }
       );
 
-      console.log("controllerResponse", controllerResponse);
-    } catch (error) {
-      setAlertMessage("Erro ao editar Moradia");
-      setShowAlert(true);
-      setTimeout(() => {
-        setShowAlert(false);
-      }, 3000);
+      console.log("residentResponse", residentResponse);
+
+      if (residentResponse.success) {
+        setLoading(false);
+        setAlertMessage("Residente inserido com sucesso.");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+      }
+
+      initialSetup();
+      clearResident();
+      setLoading(false);
+    } catch (error: any) {
+      console.log(error.message);
     }
   };
 
   const deleteResident = async () => {
     try {
+      setLoading(true);
       setShowDeleteResidentControl(false);
       const residentIndex = residentsArray.findIndex(
-        (resident) => resident.cpf === residentToDelete
+        (resident) => resident.cpf === residentToDelete.cpf
       );
 
-      console.log(residentIndex);
-
       if (residentIndex !== -1) {
-        console.log("entrou");
-
         const temp = [...residentsArray];
         temp.splice(residentIndex, 1);
         setResidentsArray(() => temp);
-      }
 
-      updateHabitation();
+        if (residentToDelete.id) {
+          const deleteResponse = await fetchApi.del(
+            `/residents/delete/${residentToDelete.id}`,
+            {
+              headers: {
+                "router-id": "WEB#API",
+                Authorization: context.getToken(),
+              },
+            }
+          );
+
+          if (deleteResponse.success) {
+            setAlertMessage("Residente excluído com sucesso.");
+            setShowAlert(true);
+            setTimeout(() => {
+              setShowAlert(false);
+            }, 3000);
+          }
+        }
+      }
+      setLoading(false);
+      initialSetup();
     } catch (error) {
       setAlertMessage("Erro ao excluir Morador");
       setShowAlert(true);
@@ -231,6 +333,26 @@ export default function HabitationItem() {
         setShowAlert(false);
       }, 3000);
     }
+  };
+
+  const handleBlockChange = async (value: string) => {
+    if (value === "0") {
+      setBlock(() => ({
+        blockId: "0",
+        blockName: "Selecione o Bloco",
+      }));
+      return;
+    }
+    const selected = blocksArray.filter(
+      (item: { id: string; name: string }) => {
+        return item.id === value;
+      }
+    );
+
+    setBlock({
+      blockId: selected[0].id,
+      blockName: selected[0].name,
+    });
   };
 
   return (
@@ -294,7 +416,7 @@ export default function HabitationItem() {
                     alignItems: "center",
                   }}
                 >
-                  <Typography variant="h4">Dados da Habitação</Typography>
+                  <Typography variant="h4">Dados da Moradia</Typography>
                 </Box>
               </Grid>
               <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
@@ -339,6 +461,30 @@ export default function HabitationItem() {
                       }}
                     />
                   </Grid>
+                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                    <FormControl fullWidth>
+                      <InputLabel id="demo-simple-select-label">
+                        Bloco
+                      </InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={block.blockId}
+                        label="Bloco"
+                        onChange={(event: SelectChangeEvent<string>) => {
+                          handleBlockChange(event?.target.value);
+                        }}
+                      >
+                        <MenuItem value={"0"}>Selecione o Bloco</MenuItem>
+                        {blocksArray.length > 0 &&
+                          blocksArray.map((item, index) => (
+                            <MenuItem value={item.id} key={index}>
+                              {item.name}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
                 </>
               ) : (
                 <Fragment>
@@ -369,14 +515,10 @@ export default function HabitationItem() {
                   startIcon={<Save />}
                   type="submit"
                   onClick={() => {
-                    if (!allowEditing) {
-                      return;
-                    } else {
-                      updateHabitation();
-                    }
+                    updateHabitation();
                   }}
                 >
-                  {allowEditing ? "Salvar" : "Salvar (Desativado)"}
+                  Salvar
                 </Button>
               </Grid>
             </Grid>
@@ -398,10 +540,10 @@ export default function HabitationItem() {
                   justifyContent="center"
                 >
                   <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
-                    <Typography variant="h4">Moradores da Habitação</Typography>
+                    <Typography variant="h4">Residentes da Moradia</Typography>
                   </Grid>
                   <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
-                    <Tooltip title="Adicionar Morador">
+                    <Tooltip title="Adicionar Residente">
                       <Box
                         sx={{
                           width: "100%",
@@ -492,6 +634,16 @@ export default function HabitationItem() {
                                           : "Não informado"}
                                       </b>
                                     </Typography>
+                                    <Typography>
+                                      Titular do Imóvel?:{" "}
+                                      <b>
+                                        {item.isPropertyOwner ? "Sim" : "Não "}
+                                      </b>
+                                    </Typography>
+                                    <Typography>
+                                      Empregado do Imóvel?:{" "}
+                                      <b>{item.isEmployee ? "Sim" : "Não "}</b>
+                                    </Typography>
                                   </Link>
                                 </Tooltip>
                               </Grid>
@@ -505,7 +657,10 @@ export default function HabitationItem() {
                                     }}
                                     onClick={() => {
                                       setShowDeleteResidentControl(true);
-                                      setResidentToDelete(item.cpf);
+                                      setResidentToDelete({
+                                        cpf: item.cpf,
+                                        id: item.id ? item.id : "",
+                                      });
                                     }}
                                   >
                                     <DeleteForever />
@@ -555,7 +710,10 @@ export default function HabitationItem() {
                                   }}
                                   onClick={() => {
                                     setShowDeleteResidentControl(true);
-                                    setResidentToDelete(item.cpf);
+                                    setResidentToDelete({
+                                      id: item.id ? item.id : "",
+                                      cpf: item.cpf,
+                                    });
                                   }}
                                 >
                                   <DeleteForever />

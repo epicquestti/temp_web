@@ -385,6 +385,7 @@ export default function CondoItem() {
         setShowHabitationModal(false);
         setHabitation({ blockId: "0", name: "" });
         setSelectedBlock({ condominiumId: "", id: "0", name: "" });
+        setLoading(false);
         setHabitation((prev) => ({ ...prev, name: "" }));
         return;
       }
@@ -403,6 +404,7 @@ export default function CondoItem() {
         setHabitation({ blockId: "0", name: "" });
         setSelectedBlock({ condominiumId: "", id: "0", name: "" });
         setHabitation((prev) => ({ ...prev, name: "" }));
+        setLoading(false);
         return;
       }
       setShowHabitationModal(false);
@@ -866,7 +868,6 @@ export default function CondoItem() {
                     </Tooltip>
                   </Grid>
                 </Grid>
-                {JSON.stringify(blocksArray)}
                 {blocksArray.length > 0 &&
                   blocksArray.map((item, index) => {
                     const url = `/blockItem/${item.id}`;
