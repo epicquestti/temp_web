@@ -23,9 +23,11 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { ChangeEvent, useEffect, useState } from "react";
+import LoagindGridGif from "../../components/DataGridV2/components/assets/loading.gif";
 import HabitationModal from "./habitationModal";
 
 type addressType = {
@@ -55,6 +57,7 @@ export default function CondoItem() {
   const context = useApplicationContext();
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [screenLoading, setScreenLoading] = useState<boolean>(false);
   const [condoName, setCondoName] = useState<string>("Aguarde...");
   const [allowEditing, setAllowEditing] = useState<boolean>(false);
 
@@ -143,7 +146,7 @@ export default function CondoItem() {
 
   const initialSetup = async () => {
     try {
-      setLoading(true);
+      setScreenLoading(true);
       //Buscar no banco os dados do condomínio e os associados(Blocos, Residentes)
       const controllerResponse = await fetchApi.get(
         `/condominium/${id?.toString()}`,
@@ -180,9 +183,9 @@ export default function CondoItem() {
         setStatesArray(statesResponse.data);
       }
 
-      setLoading(false);
+      setScreenLoading(false);
     } catch (error: any) {
-      setLoading(false);
+      setScreenLoading(false);
     }
   };
 
@@ -515,473 +518,377 @@ export default function CondoItem() {
       }}
       loading={loading}
     >
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Paper sx={{ p: 3 }}>
-            <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Grid item xs={12} sm={12} md={8} lg={8} xl={8}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="h4">Dados do Condomínio</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                  }}
-                >
-                  <Button
-                    endIcon={<Edit />}
-                    variant="contained"
-                    onClick={() => {
-                      setAllowEditing(!allowEditing);
+      {screenLoading ? (
+        <Grid container spacing={2} justifyContent="center" alignItems="center">
+          <Box sx={{ marginTop: "20%" }}>
+            <Image
+              src={LoagindGridGif}
+              alt="GIF de carregamento"
+              width={250}
+              height={250}
+              priority
+            />
+          </Box>
+        </Grid>
+      ) : (
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+            <Paper sx={{ p: 3 }}>
+              <Grid
+                container
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Grid item xs={12} sm={12} md={8} lg={8} xl={8}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "flex-start",
+                      alignItems: "center",
                     }}
                   >
-                    Editar
-                  </Button>
-                </Box>
-              </Grid>
-              {allowEditing ? (
-                <>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <TextField
-                      variant="outlined"
-                      label="Nome do Condomínio"
-                      InputLabelProps={{ shrink: true }}
-                      value={condoItem.name}
-                      inputProps={{ readOnly: !allowEditing }}
-                      fullWidth
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ) => {
-                        setCondoItem((prev) => ({
-                          ...prev,
-                          name: event.target.value,
-                        }));
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <TextField
-                      variant="outlined"
-                      label="CNPJ do Condomínio"
-                      InputLabelProps={{ shrink: true }}
-                      value={condoItem.cnpj ? cnpjMask(condoItem.cnpj) : ""}
-                      fullWidth
-                      inputProps={{ readOnly: !allowEditing }}
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ) => {
-                        setCondoItem((prev) => ({
-                          ...prev,
-                          cnpj: cnpjMask(event.target.value),
-                        }));
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <TextField
-                      variant="outlined"
-                      label="Endereço"
-                      InputLabelProps={{ shrink: true }}
-                      value={address.street}
-                      fullWidth
-                      inputProps={{ readOnly: !allowEditing }}
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ) => {
-                        setAddress((prev) => ({
-                          ...prev,
-                          street: event.target.value,
-                        }));
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <TextField
-                      variant="outlined"
-                      label="Bairro"
-                      InputLabelProps={{ shrink: true }}
-                      value={address.neighborhood}
-                      fullWidth
-                      inputProps={{ readOnly: !allowEditing }}
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ) => {
-                        setAddress((prev) => ({
-                          ...prev,
-                          neighborhood: event.target.value,
-                        }));
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                    <TextField
-                      variant="outlined"
-                      label="Número"
-                      InputLabelProps={{ shrink: true }}
-                      value={address.streetNumber}
-                      fullWidth
-                      inputProps={{ readOnly: !allowEditing }}
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ) => {
-                        setAddress((prev) => ({
-                          ...prev,
-                          streetNumber: event.target.value,
-                        }));
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                    <TextField
-                      variant="outlined"
-                      label="Complemento"
-                      InputLabelProps={{ shrink: true }}
-                      value={address.complement}
-                      fullWidth
-                      inputProps={{ readOnly: !allowEditing }}
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ) => {
-                        setAddress((prev) => ({
-                          ...prev,
-                          complement: event.target.value,
-                        }));
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                    <TextField
-                      variant="outlined"
-                      label="CEP"
-                      InputLabelProps={{ shrink: true }}
-                      value={cepMask(address.cep)}
-                      fullWidth
-                      inputProps={{ readOnly: !allowEditing }}
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ) => {
-                        getCep(event.target.value);
-                        setAddress((prev) => ({
-                          ...prev,
-                          cep: event.target.value,
-                        }));
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <TextField
-                      variant="outlined"
-                      label="Cidade"
-                      InputLabelProps={{ shrink: true }}
-                      value={address.cityName}
-                      fullWidth
-                      inputProps={{ readOnly: !allowEditing }}
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ) => {
-                        setAddress((prev) => ({
-                          ...prev,
-                          city: event.target.value,
-                        }));
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <FormControl fullWidth>
-                      <InputLabel id="stateId">{"Estado"}</InputLabel>
-                      <Select
-                        labelId="stateId"
-                        label="Estado"
-                        inputProps={{ readOnly: !allowEditing }}
-                        value={address.stateIbge}
-                        onChange={(event: SelectChangeEvent) => {
-                          setSelectedState(() => event.target.value.toString());
-                        }}
-                      >
-                        <MenuItem value={0}>Selecione ...</MenuItem>
-                        {statesArray.length > 0 &&
-                          statesArray.map(
-                            (item: {
-                              ibge: number;
-                              acronym: string;
-                              name: string;
-                            }) => (
-                              <MenuItem value={item.ibge} key={item.ibge}>
-                                {item.acronym}
-                              </MenuItem>
-                            )
-                          )}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<Save />}
-                      type="submit"
-                      onClick={() => {
-                        updateCondominium();
-                      }}
-                    >
-                      Salvar
-                    </Button>
-                  </Grid>
-                </>
-              ) : (
-                <>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      Nome: <b>{condoItem.name}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      CNPJ:{" "}
-                      <b>{condoItem.cnpj ? cnpjMask(condoItem.cnpj) : ""}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      Endereço: <b>{address.street}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      Bairro: <b>{address.neighborhood}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      Número: <b>{address.streetNumber}</b>
-                    </Typography>
-                  </Grid>
-
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      CEP: <b>{address.cep ? cepMask(address.cep) : ""}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      Cidade: <b>{address.cityName}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      Estado: <b>{address.stateName}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Typography>
-                      Complemento: <b>{address.complement}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<Save />}
-                      type="submit"
-                      onClick={() => {
-                        updateCondominium();
-                      }}
-                    >
-                      Salvar
-                    </Button>
-                  </Grid>
-                </>
-              )}
-            </Grid>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Paper sx={{ p: 3 }}>
-            <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                <Grid
-                  container
-                  spacing={2}
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
-                    <Typography variant="h4">Blocos Cadastrados</Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
-                    <Tooltip title="Adicionar Bloco">
-                      <Box
-                        sx={{
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Fab
-                          color="primary"
-                          aria-label="add"
-                          onClick={() => setShowBlockModal(true)}
-                        >
-                          <Add />
-                        </Fab>
-                      </Box>
-                    </Tooltip>
-                  </Grid>
+                    <Typography variant="h4">Dados do Condomínio</Typography>
+                  </Box>
                 </Grid>
-                {blocksArray.length > 0 &&
-                  blocksArray.map((item, index) => {
-                    const url = `/blockItem/${item.id}`;
-                    return (
-                      <Grid
-                        item
-                        xs={12}
-                        sm={12}
-                        md={12}
-                        lg={12}
-                        xl={12}
-                        key={index}
-                      >
-                        <Box
-                          sx={{
-                            border: (theme) =>
-                              `2px solid ${theme.palette.primary.dark}`,
-                            padding: 1,
-                            borderRadius: 2,
-                            marginTop: 1,
+                <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Button
+                      endIcon={<Edit />}
+                      variant="contained"
+                      onClick={() => {
+                        setAllowEditing(!allowEditing);
+                      }}
+                    >
+                      Editar
+                    </Button>
+                  </Box>
+                </Grid>
+                {allowEditing ? (
+                  <>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <TextField
+                        variant="outlined"
+                        label="Nome do Condomínio"
+                        InputLabelProps={{ shrink: true }}
+                        value={condoItem.name}
+                        inputProps={{ readOnly: !allowEditing }}
+                        fullWidth
+                        onChange={(
+                          event: ChangeEvent<
+                            HTMLInputElement | HTMLTextAreaElement
+                          >
+                        ) => {
+                          setCondoItem((prev) => ({
+                            ...prev,
+                            name: event.target.value,
+                          }));
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <TextField
+                        variant="outlined"
+                        label="CNPJ do Condomínio"
+                        InputLabelProps={{ shrink: true }}
+                        value={condoItem.cnpj ? cnpjMask(condoItem.cnpj) : ""}
+                        fullWidth
+                        inputProps={{ readOnly: !allowEditing }}
+                        onChange={(
+                          event: ChangeEvent<
+                            HTMLInputElement | HTMLTextAreaElement
+                          >
+                        ) => {
+                          setCondoItem((prev) => ({
+                            ...prev,
+                            cnpj: cnpjMask(event.target.value),
+                          }));
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <TextField
+                        variant="outlined"
+                        label="Endereço"
+                        InputLabelProps={{ shrink: true }}
+                        value={address.street}
+                        fullWidth
+                        inputProps={{ readOnly: !allowEditing }}
+                        onChange={(
+                          event: ChangeEvent<
+                            HTMLInputElement | HTMLTextAreaElement
+                          >
+                        ) => {
+                          setAddress((prev) => ({
+                            ...prev,
+                            street: event.target.value,
+                          }));
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <TextField
+                        variant="outlined"
+                        label="Bairro"
+                        InputLabelProps={{ shrink: true }}
+                        value={address.neighborhood}
+                        fullWidth
+                        inputProps={{ readOnly: !allowEditing }}
+                        onChange={(
+                          event: ChangeEvent<
+                            HTMLInputElement | HTMLTextAreaElement
+                          >
+                        ) => {
+                          setAddress((prev) => ({
+                            ...prev,
+                            neighborhood: event.target.value,
+                          }));
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                      <TextField
+                        variant="outlined"
+                        label="Número"
+                        InputLabelProps={{ shrink: true }}
+                        value={address.streetNumber}
+                        fullWidth
+                        inputProps={{ readOnly: !allowEditing }}
+                        onChange={(
+                          event: ChangeEvent<
+                            HTMLInputElement | HTMLTextAreaElement
+                          >
+                        ) => {
+                          setAddress((prev) => ({
+                            ...prev,
+                            streetNumber: event.target.value,
+                          }));
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                      <TextField
+                        variant="outlined"
+                        label="Complemento"
+                        InputLabelProps={{ shrink: true }}
+                        value={address.complement}
+                        fullWidth
+                        inputProps={{ readOnly: !allowEditing }}
+                        onChange={(
+                          event: ChangeEvent<
+                            HTMLInputElement | HTMLTextAreaElement
+                          >
+                        ) => {
+                          setAddress((prev) => ({
+                            ...prev,
+                            complement: event.target.value,
+                          }));
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                      <TextField
+                        variant="outlined"
+                        label="CEP"
+                        InputLabelProps={{ shrink: true }}
+                        value={cepMask(address.cep)}
+                        fullWidth
+                        inputProps={{ readOnly: !allowEditing }}
+                        onChange={(
+                          event: ChangeEvent<
+                            HTMLInputElement | HTMLTextAreaElement
+                          >
+                        ) => {
+                          getCep(event.target.value);
+                          setAddress((prev) => ({
+                            ...prev,
+                            cep: event.target.value,
+                          }));
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <TextField
+                        variant="outlined"
+                        label="Cidade"
+                        InputLabelProps={{ shrink: true }}
+                        value={address.cityName}
+                        fullWidth
+                        inputProps={{ readOnly: !allowEditing }}
+                        onChange={(
+                          event: ChangeEvent<
+                            HTMLInputElement | HTMLTextAreaElement
+                          >
+                        ) => {
+                          setAddress((prev) => ({
+                            ...prev,
+                            city: event.target.value,
+                          }));
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <FormControl fullWidth>
+                        <InputLabel id="stateId">{"Estado"}</InputLabel>
+                        <Select
+                          labelId="stateId"
+                          label="Estado"
+                          inputProps={{ readOnly: !allowEditing }}
+                          value={address.stateIbge}
+                          onChange={(event: SelectChangeEvent) => {
+                            setSelectedState(() =>
+                              event.target.value.toString()
+                            );
                           }}
                         >
-                          <Grid
-                            container
-                            spacing={2}
-                            alignItems="center"
-                            justifyContent="center"
-                          >
-                            <Grid item xs={12} sm={12} md={11} lg={11} xl={11}>
-                              <Link
-                                href={url}
-                                style={{
-                                  textDecoration: "none",
-                                  color: "#000",
-                                }}
-                              >
-                                <Tooltip title="Clique para visualizar o bloco">
-                                  <Typography>
-                                    Nome: <b>{item.name}</b>
-                                  </Typography>
-                                </Tooltip>
-                              </Link>
-                            </Grid>
+                          <MenuItem value={0}>Selecione ...</MenuItem>
+                          {statesArray.length > 0 &&
+                            statesArray.map(
+                              (item: {
+                                ibge: number;
+                                acronym: string;
+                                name: string;
+                              }) => (
+                                <MenuItem value={item.ibge} key={item.ibge}>
+                                  {item.acronym}
+                                </MenuItem>
+                              )
+                            )}
+                        </Select>
+                      </FormControl>
+                    </Grid>
 
-                            <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
-                              <IconButton
-                                size="large"
-                                sx={{
-                                  color: (theme) =>
-                                    ` ${theme.palette.error.main}`,
-                                }}
-                                onClick={() => {
-                                  setShowDeleteBlockControl(true);
-                                  setBlockToDelete((prev) => ({
-                                    ...prev,
-                                    id: item.id ? item.id : null,
-                                    name: item.name,
-                                  }));
-                                }}
-                              >
-                                <DeleteForever />
-                              </IconButton>
-                            </Grid>
-                          </Grid>
-                        </Box>
-                      </Grid>
-                    );
-                  })}
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Paper sx={{ p: 3 }}>
-            <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                <Grid
-                  container
-                  spacing={2}
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
-                    <Typography variant="h4">Moradias Cadastradas</Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
-                    <Tooltip title="Adicionar Moradia">
-                      <Box
-                        sx={{
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          alignItems: "center",
+                    <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<Save />}
+                        type="submit"
+                        onClick={() => {
+                          updateCondominium();
                         }}
                       >
-                        <Fab
-                          color="primary"
-                          aria-label="add"
-                          onClick={() => setShowHabitationModal(true)}
+                        Salvar
+                      </Button>
+                    </Grid>
+                  </>
+                ) : (
+                  <>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        Nome: <b>{condoItem.name}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        CNPJ:{" "}
+                        <b>{condoItem.cnpj ? cnpjMask(condoItem.cnpj) : ""}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        Endereço: <b>{address.street}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        Bairro: <b>{address.neighborhood}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        Número: <b>{address.streetNumber}</b>
+                      </Typography>
+                    </Grid>
+
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        CEP: <b>{address.cep ? cepMask(address.cep) : ""}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        Cidade: <b>{address.cityName}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        Estado: <b>{address.stateName}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                      <Typography>
+                        Complemento: <b>{address.complement}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<Save />}
+                        type="submit"
+                        onClick={() => {
+                          updateCondominium();
+                        }}
+                      >
+                        Salvar
+                      </Button>
+                    </Grid>
+                  </>
+                )}
+              </Grid>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+            <Paper sx={{ p: 3 }}>
+              <Grid
+                container
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <Grid
+                    container
+                    spacing={2}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
+                      <Typography variant="h4">Blocos Cadastrados</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                      <Tooltip title="Adicionar Bloco">
+                        <Box
+                          sx={{
+                            width: "100%",
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            alignItems: "center",
+                          }}
                         >
-                          <Add />
-                        </Fab>
-                      </Box>
-                    </Tooltip>
+                          <Fab
+                            color="primary"
+                            aria-label="add"
+                            onClick={() => setShowBlockModal(true)}
+                          >
+                            <Add />
+                          </Fab>
+                        </Box>
+                      </Tooltip>
+                    </Grid>
                   </Grid>
-                  {habitationsArray &&
-                    habitationsArray.length > 0 &&
-                    habitationsArray.map((item, index) => {
-                      const url = `/habitationItem/${item.habitationId}`;
+                  {blocksArray.length > 0 &&
+                    blocksArray.map((item, index) => {
+                      const url = `/blockItem/${item.id}`;
                       return (
                         <Grid
                           item
@@ -1022,69 +929,32 @@ export default function CondoItem() {
                                     color: "#000",
                                   }}
                                 >
-                                  <>
-                                    <Tooltip title="Clique para visualizar a Moradia">
-                                      <Grid
-                                        container
-                                        spacing={2}
-                                        alignItems="center"
-                                        justifyContent="center"
-                                      >
-                                        <Grid
-                                          item
-                                          xs={12}
-                                          sm={12}
-                                          md={6}
-                                          lg={6}
-                                          xl={6}
-                                        >
-                                          <Typography>
-                                            Nome: <b>{item.habitationName}</b>
-                                          </Typography>
-                                        </Grid>
-                                        <Grid
-                                          item
-                                          xs={12}
-                                          sm={12}
-                                          md={6}
-                                          lg={6}
-                                          xl={6}
-                                        >
-                                          <Typography>
-                                            Bloco:{" "}
-                                            <b>
-                                              {item.blockName
-                                                ? item.blockName
-                                                : "Não informado"}
-                                            </b>
-                                          </Typography>
-                                        </Grid>
-                                      </Grid>
-                                    </Tooltip>
-                                  </>
+                                  <Tooltip title="Clique para visualizar o bloco">
+                                    <Typography>
+                                      Nome: <b>{item.name}</b>
+                                    </Typography>
+                                  </Tooltip>
                                 </Link>
                               </Grid>
 
                               <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
-                                <Tooltip title="Clique para excluir a moradia">
-                                  <IconButton
-                                    size="large"
-                                    sx={{
-                                      color: (theme) =>
-                                        ` ${theme.palette.error.main}`,
-                                    }}
-                                    onClick={() => {
-                                      setShowDeleteHabitationControl(true);
-                                      setHabitationToDelete((prev) => ({
-                                        ...prev,
-                                        habitationName: item.habitationName,
-                                        index: index,
-                                      }));
-                                    }}
-                                  >
-                                    <DeleteForever />
-                                  </IconButton>
-                                </Tooltip>
+                                <IconButton
+                                  size="large"
+                                  sx={{
+                                    color: (theme) =>
+                                      ` ${theme.palette.error.main}`,
+                                  }}
+                                  onClick={() => {
+                                    setShowDeleteBlockControl(true);
+                                    setBlockToDelete((prev) => ({
+                                      ...prev,
+                                      id: item.id ? item.id : null,
+                                      name: item.name,
+                                    }));
+                                  }}
+                                >
+                                  <DeleteForever />
+                                </IconButton>
                               </Grid>
                             </Grid>
                           </Box>
@@ -1093,10 +963,167 @@ export default function CondoItem() {
                     })}
                 </Grid>
               </Grid>
-            </Grid>
-          </Paper>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+            <Paper sx={{ p: 3 }}>
+              <Grid
+                container
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <Grid
+                    container
+                    spacing={2}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
+                      <Typography variant="h4">Moradias Cadastradas</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                      <Tooltip title="Adicionar Moradia">
+                        <Box
+                          sx={{
+                            width: "100%",
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Fab
+                            color="primary"
+                            aria-label="add"
+                            onClick={() => setShowHabitationModal(true)}
+                          >
+                            <Add />
+                          </Fab>
+                        </Box>
+                      </Tooltip>
+                    </Grid>
+                    {habitationsArray &&
+                      habitationsArray.length > 0 &&
+                      habitationsArray.map((item, index) => {
+                        const url = `/habitationItem/${item.habitationId}`;
+                        return (
+                          <Grid
+                            item
+                            xs={12}
+                            sm={12}
+                            md={12}
+                            lg={12}
+                            xl={12}
+                            key={index}
+                          >
+                            <Box
+                              sx={{
+                                border: (theme) =>
+                                  `2px solid ${theme.palette.primary.dark}`,
+                                padding: 1,
+                                borderRadius: 2,
+                                marginTop: 1,
+                              }}
+                            >
+                              <Grid
+                                container
+                                spacing={2}
+                                alignItems="center"
+                                justifyContent="center"
+                              >
+                                <Grid
+                                  item
+                                  xs={12}
+                                  sm={12}
+                                  md={11}
+                                  lg={11}
+                                  xl={11}
+                                >
+                                  <Link
+                                    href={url}
+                                    style={{
+                                      textDecoration: "none",
+                                      color: "#000",
+                                    }}
+                                  >
+                                    <>
+                                      <Tooltip title="Clique para visualizar a Moradia">
+                                        <Grid
+                                          container
+                                          spacing={2}
+                                          alignItems="center"
+                                          justifyContent="center"
+                                        >
+                                          <Grid
+                                            item
+                                            xs={12}
+                                            sm={12}
+                                            md={6}
+                                            lg={6}
+                                            xl={6}
+                                          >
+                                            <Typography>
+                                              Nome: <b>{item.habitationName}</b>
+                                            </Typography>
+                                          </Grid>
+                                          <Grid
+                                            item
+                                            xs={12}
+                                            sm={12}
+                                            md={6}
+                                            lg={6}
+                                            xl={6}
+                                          >
+                                            <Typography>
+                                              Bloco:{" "}
+                                              <b>
+                                                {item.blockName
+                                                  ? item.blockName
+                                                  : "Não informado"}
+                                              </b>
+                                            </Typography>
+                                          </Grid>
+                                        </Grid>
+                                      </Tooltip>
+                                    </>
+                                  </Link>
+                                </Grid>
+
+                                <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
+                                  <Tooltip title="Clique para excluir a moradia">
+                                    <IconButton
+                                      size="large"
+                                      sx={{
+                                        color: (theme) =>
+                                          ` ${theme.palette.error.main}`,
+                                      }}
+                                      onClick={() => {
+                                        setShowDeleteHabitationControl(true);
+                                        setHabitationToDelete((prev) => ({
+                                          ...prev,
+                                          habitationName: item.habitationName,
+                                          index: index,
+                                        }));
+                                      }}
+                                    >
+                                      <DeleteForever />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Grid>
+                              </Grid>
+                            </Box>
+                          </Grid>
+                        );
+                      })}
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
+
       <Dialog
         open={showBlockModal}
         onClose={() => {

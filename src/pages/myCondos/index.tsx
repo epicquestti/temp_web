@@ -23,6 +23,7 @@ import LoagindGridGif from "../../components/DataGridV2/components/assets/loadin
 
 export default function MyCondos() {
   const [loading, setLoading] = useState<boolean>(false);
+  const [screenLoading, setScreenLoading] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [showSubscription, setShowSubscription] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
@@ -36,7 +37,7 @@ export default function MyCondos() {
 
   const initialSetup = async () => {
     try {
-      setLoading(true);
+      setScreenLoading(true);
       const controllerResponse = await fetchApi.get(`/contractor/get-condos`, {
         headers: {
           Authorization: context.getToken(),
@@ -61,9 +62,9 @@ export default function MyCondos() {
       if (contractorKeys.data.length > 0) {
         setContractorKeys(contractorKeys.data);
       }
-      setLoading(false);
+      setScreenLoading(false);
     } catch (error: any) {
-      setLoading(false);
+      setScreenLoading(false);
       console.log(error.message);
     }
   };
@@ -100,7 +101,7 @@ export default function MyCondos() {
       title="Meus Condomínios"
     >
       <Grid container spacing={2}>
-        {loading ? (
+        {screenLoading ? (
           <Grid
             container
             spacing={2}

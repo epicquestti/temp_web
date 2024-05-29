@@ -23,13 +23,16 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { ChangeEvent, Fragment, useEffect, useState } from "react";
+import LoagindGridGif from "../../components/DataGridV2/components/assets/loading.gif";
 import ResidentModal, { residentTypeProps } from "./residentModal";
 
 export default function HabitationItem() {
   const [loading, setLoading] = useState<boolean>(false);
+  const [screenLoading, setScreenLoading] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [allowEditing, setAllowEditing] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
@@ -87,46 +90,53 @@ export default function HabitationItem() {
   const context = useApplicationContext();
 
   const initialSetup = async () => {
-    const controllerResponse = await fetchApi.get(`/habitations/${id}`, {
-      headers: {
-        "router-id": "WEB#API",
-        Authorization: context.getToken(),
-      },
-    });
-
-    if (controllerResponse.success) {
-      const data = controllerResponse.data;
-      setHabitation({
-        habitationId: data.habitation[0].habitationId,
-        habitationName: data.habitation[0].habitationName,
+    try {
+      setScreenLoading(true);
+      const controllerResponse = await fetchApi.get(`/habitations/${id}`, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
       });
-      setCondo((prev) => ({
-        ...prev,
-        condoId: data.habitation[0].condominiumId,
-        condoName: data.habitation[0].condominiumName,
-      }));
-      setBlock((prev) => ({
-        ...prev,
-        blockId: data.habitation[0].blockId,
-        blockName: data.habitation[0].blockName,
-      }));
-      if (controllerResponse.data.residents.length > 0) {
-        setResidentsArray(data.residents);
-      }
 
-      const allBlocks = await fetchApi.get(
-        `/blocks/get-blocks/${controllerResponse.data.habitation[0].condominiumId}`,
-        {
-          headers: {
-            "router-id": "WEB#API",
-            Authorization: context.getToken(),
-          },
+      if (controllerResponse.success) {
+        const data = controllerResponse.data;
+        setHabitation({
+          habitationId: data.habitation[0].habitationId,
+          habitationName: data.habitation[0].habitationName,
+        });
+        setCondo((prev) => ({
+          ...prev,
+          condoId: data.habitation[0].condominiumId,
+          condoName: data.habitation[0].condominiumName,
+        }));
+        setBlock((prev) => ({
+          ...prev,
+          blockId: data.habitation[0].blockId,
+          blockName: data.habitation[0].blockName,
+        }));
+        if (controllerResponse.data.residents.length > 0) {
+          setResidentsArray(data.residents);
         }
-      );
 
-      if (allBlocks.success) {
-        setBlocksArray(allBlocks.data);
+        const allBlocks = await fetchApi.get(
+          `/blocks/get-blocks/${controllerResponse.data.habitation[0].condominiumId}`,
+          {
+            headers: {
+              "router-id": "WEB#API",
+              Authorization: context.getToken(),
+            },
+          }
+        );
+
+        if (allBlocks.success) {
+          setBlocksArray(allBlocks.data);
+        }
       }
+      setScreenLoading(false);
+    } catch (error: any) {
+      setScreenLoading(false);
+      console.log(error.message);
     }
   };
 
@@ -366,7 +376,7 @@ export default function HabitationItem() {
         {
           text: "Condomínios",
           iconName: "home_work",
-          href: "/condominium",
+          href: "/myCondos",
         },
         {
           text: `${condo.condoName}`,
@@ -398,184 +408,298 @@ export default function HabitationItem() {
       }}
       title="Habitações"
     >
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Paper sx={{ p: 3 }}>
-            <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Grid item xs={12} sm={12} md={8} lg={8} xl={8}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="h4">Dados da Moradia</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                  }}
-                >
-                  <Button
-                    endIcon={<Edit />}
-                    variant="contained"
-                    onClick={() => {
-                      setAllowEditing(!allowEditing);
+      {screenLoading ? (
+        <Grid container spacing={2} justifyContent="center" alignItems="center">
+          <Box sx={{ marginTop: "20%" }}>
+            <Image
+              src={LoagindGridGif}
+              alt="GIF de carregamento"
+              width={250}
+              height={250}
+              priority
+            />
+          </Box>
+        </Grid>
+      ) : (
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+            <Paper sx={{ p: 3 }}>
+              <Grid
+                container
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Grid item xs={12} sm={12} md={8} lg={8} xl={8}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "flex-start",
+                      alignItems: "center",
                     }}
                   >
-                    Editar
-                  </Button>
-                </Box>
-              </Grid>
-              {allowEditing ? (
-                <>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <TextField
-                      variant="outlined"
-                      label="Nome da Moradia"
-                      InputLabelProps={{ shrink: true }}
-                      value={habitation.habitationName}
-                      inputProps={{ readOnly: !allowEditing }}
-                      fullWidth
-                      onChange={(
-                        event: ChangeEvent<
-                          HTMLInputElement | HTMLTextAreaElement
-                        >
-                      ) => {
-                        setHabitation((prev) => ({
-                          ...prev,
-                          habitationName: event.target.value,
-                        }));
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <FormControl fullWidth>
-                      <InputLabel id="demo-simple-select-label">
-                        Bloco
-                      </InputLabel>
-                      <Select
-                        labelId="demo-simple-select-label"
-                        id="demo-simple-select"
-                        value={block.blockId}
-                        label="Bloco"
-                        onChange={(event: SelectChangeEvent<string>) => {
-                          handleBlockChange(event?.target.value);
-                        }}
-                      >
-                        <MenuItem value={"0"}>Selecione o Bloco</MenuItem>
-                        {blocksArray.length > 0 &&
-                          blocksArray.map((item, index) => (
-                            <MenuItem value={item.id} key={index}>
-                              {item.name}
-                            </MenuItem>
-                          ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </>
-              ) : (
-                <Fragment>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      Nome: <b>{habitation.habitationName}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      Bloco:{" "}
-                      <b>
-                        {block.blockName ? block.blockName : "Não informado"}
-                      </b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Typography>
-                      Condomínio: <b>{condo.condoName}</b>
-                    </Typography>
-                  </Grid>
-                </Fragment>
-              )}
-              <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<Save />}
-                  type="submit"
-                  onClick={() => {
-                    updateHabitation();
-                  }}
-                >
-                  Salvar
-                </Button>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Paper sx={{ p: 3 }}>
-            <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                <Grid
-                  container
-                  spacing={2}
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
-                    <Typography variant="h4">Residentes da Moradia</Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
-                    <Tooltip title="Adicionar Residente">
-                      <Box
-                        sx={{
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Fab
-                          color="primary"
-                          aria-label="add"
-                          onClick={() => setShowResidentModal(true)}
-                        >
-                          <Add />
-                        </Fab>
-                      </Box>
-                    </Tooltip>
-                  </Grid>
+                    <Typography variant="h4">Dados da Moradia</Typography>
+                  </Box>
                 </Grid>
-                {residentsArray.length > 0 &&
-                  residentsArray.map((item, index) => (
-                    <Grid
-                      item
-                      xs={12}
-                      sm={12}
-                      md={12}
-                      lg={12}
-                      xl={12}
-                      key={index}
+                <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Button
+                      endIcon={<Edit />}
+                      variant="contained"
+                      onClick={() => {
+                        setAllowEditing(!allowEditing);
+                      }}
                     >
-                      {item.id ? (
-                        <Fragment>
+                      Editar
+                    </Button>
+                  </Box>
+                </Grid>
+                {allowEditing ? (
+                  <>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <TextField
+                        variant="outlined"
+                        label="Nome da Moradia"
+                        InputLabelProps={{ shrink: true }}
+                        value={habitation.habitationName}
+                        inputProps={{ readOnly: !allowEditing }}
+                        fullWidth
+                        onChange={(
+                          event: ChangeEvent<
+                            HTMLInputElement | HTMLTextAreaElement
+                          >
+                        ) => {
+                          setHabitation((prev) => ({
+                            ...prev,
+                            habitationName: event.target.value,
+                          }));
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <FormControl fullWidth>
+                        <InputLabel id="demo-simple-select-label">
+                          Bloco
+                        </InputLabel>
+                        <Select
+                          labelId="demo-simple-select-label"
+                          id="demo-simple-select"
+                          value={block.blockId}
+                          label="Bloco"
+                          onChange={(event: SelectChangeEvent<string>) => {
+                            handleBlockChange(event?.target.value);
+                          }}
+                        >
+                          <MenuItem value={"0"}>Selecione o Bloco</MenuItem>
+                          {blocksArray.length > 0 &&
+                            blocksArray.map((item, index) => (
+                              <MenuItem value={item.id} key={index}>
+                                {item.name}
+                              </MenuItem>
+                            ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </>
+                ) : (
+                  <Fragment>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        Nome: <b>{habitation.habitationName}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        Bloco:{" "}
+                        <b>
+                          {block.blockName ? block.blockName : "Não informado"}
+                        </b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                      <Typography>
+                        Condomínio: <b>{condo.condoName}</b>
+                      </Typography>
+                    </Grid>
+                  </Fragment>
+                )}
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    startIcon={<Save />}
+                    type="submit"
+                    onClick={() => {
+                      updateHabitation();
+                    }}
+                  >
+                    Salvar
+                  </Button>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+            <Paper sx={{ p: 3 }}>
+              <Grid
+                container
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <Grid
+                    container
+                    spacing={2}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
+                      <Typography variant="h4">
+                        Residentes da Moradia
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                      <Tooltip title="Adicionar Residente">
+                        <Box
+                          sx={{
+                            width: "100%",
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Fab
+                            color="primary"
+                            aria-label="add"
+                            onClick={() => setShowResidentModal(true)}
+                          >
+                            <Add />
+                          </Fab>
+                        </Box>
+                      </Tooltip>
+                    </Grid>
+                  </Grid>
+                  {residentsArray.length > 0 &&
+                    residentsArray.map((item, index) => (
+                      <Grid
+                        item
+                        xs={12}
+                        sm={12}
+                        md={12}
+                        lg={12}
+                        xl={12}
+                        key={index}
+                      >
+                        {item.id ? (
+                          <Fragment>
+                            <Box
+                              sx={{
+                                border: (theme) =>
+                                  `2px solid ${theme.palette.primary.dark}`,
+                                padding: 1,
+                                borderRadius: 2,
+                                marginTop: 1,
+                              }}
+                            >
+                              <Grid
+                                container
+                                spacing={2}
+                                alignItems="center"
+                                justifyContent="center"
+                              >
+                                <Grid
+                                  item
+                                  xs={12}
+                                  sm={12}
+                                  md={11}
+                                  lg={11}
+                                  xl={11}
+                                >
+                                  <Tooltip title="Clique para visualizar o Morador">
+                                    <Link
+                                      href={`/residentItem/${item.id}`}
+                                      style={{
+                                        textDecoration: "none",
+                                        color: "#000",
+                                      }}
+                                    >
+                                      <Typography>
+                                        Nome: <b>{item.name}</b>
+                                      </Typography>
+                                      <Typography>
+                                        CPF:{" "}
+                                        <b>
+                                          {item.cpf
+                                            ? cpfMask(item.cpf)
+                                            : "Não informado"}
+                                        </b>
+                                      </Typography>
+                                      <Typography>
+                                        Telefone:{" "}
+                                        <b>
+                                          {item.phone
+                                            ? phoneMask(item.phone)
+                                            : ""}
+                                        </b>
+                                      </Typography>
+                                      <Typography>
+                                        E-Mail:{" "}
+                                        <b>
+                                          {item.email
+                                            ? item.email
+                                            : "Não informado"}
+                                        </b>
+                                      </Typography>
+                                      <Typography>
+                                        Titular do Imóvel?:{" "}
+                                        <b>
+                                          {item.isPropertyOwner
+                                            ? "Sim"
+                                            : "Não "}
+                                        </b>
+                                      </Typography>
+                                      <Typography>
+                                        Empregado do Imóvel?:{" "}
+                                        <b>
+                                          {item.isEmployee ? "Sim" : "Não "}
+                                        </b>
+                                      </Typography>
+                                    </Link>
+                                  </Tooltip>
+                                </Grid>
+                                <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
+                                  <Tooltip title="Clique para excluir o morador">
+                                    <IconButton
+                                      size="large"
+                                      sx={{
+                                        color: (theme) =>
+                                          ` ${theme.palette.error.main}`,
+                                      }}
+                                      onClick={() => {
+                                        setShowDeleteResidentControl(true);
+                                        setResidentToDelete({
+                                          cpf: item.cpf,
+                                          id: item.id ? item.id : "",
+                                        });
+                                      }}
+                                    >
+                                      <DeleteForever />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Grid>
+                              </Grid>
+                            </Box>
+                          </Fragment>
+                        ) : (
                           <Box
                             sx={{
                               border: (theme) =>
@@ -599,53 +723,18 @@ export default function HabitationItem() {
                                 lg={11}
                                 xl={11}
                               >
-                                <Tooltip title="Clique para visualizar o Morador">
-                                  <Link
-                                    href={`/residentItem/${item.id}`}
-                                    style={{
-                                      textDecoration: "none",
-                                      color: "#000",
-                                    }}
-                                  >
-                                    <Typography>
-                                      Nome: <b>{item.name}</b>
-                                    </Typography>
-                                    <Typography>
-                                      CPF:{" "}
-                                      <b>
-                                        {item.cpf
-                                          ? cpfMask(item.cpf)
-                                          : "Não informado"}
-                                      </b>
-                                    </Typography>
-                                    <Typography>
-                                      Telefone:{" "}
-                                      <b>
-                                        {item.phone
-                                          ? phoneMask(item.phone)
-                                          : ""}
-                                      </b>
-                                    </Typography>
-                                    <Typography>
-                                      E-Mail:{" "}
-                                      <b>
-                                        {item.email
-                                          ? item.email
-                                          : "Não informado"}
-                                      </b>
-                                    </Typography>
-                                    <Typography>
-                                      Titular do Imóvel?:{" "}
-                                      <b>
-                                        {item.isPropertyOwner ? "Sim" : "Não "}
-                                      </b>
-                                    </Typography>
-                                    <Typography>
-                                      Empregado do Imóvel?:{" "}
-                                      <b>{item.isEmployee ? "Sim" : "Não "}</b>
-                                    </Typography>
-                                  </Link>
-                                </Tooltip>
+                                <Typography>
+                                  Nome: <b>{item.name}</b>
+                                </Typography>
+                                <Typography>
+                                  CPF: <b>{item.cpf}</b>
+                                </Typography>
+                                <Typography>
+                                  Telefone: <b>{item.phone}</b>
+                                </Typography>
+                                <Typography>
+                                  E-Mail: <b>{item.email}</b>
+                                </Typography>
                               </Grid>
                               <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
                                 <Tooltip title="Clique para excluir o morador">
@@ -658,8 +747,8 @@ export default function HabitationItem() {
                                     onClick={() => {
                                       setShowDeleteResidentControl(true);
                                       setResidentToDelete({
-                                        cpf: item.cpf,
                                         id: item.id ? item.id : "",
+                                        cpf: item.cpf,
                                       });
                                     }}
                                   >
@@ -669,67 +758,16 @@ export default function HabitationItem() {
                               </Grid>
                             </Grid>
                           </Box>
-                        </Fragment>
-                      ) : (
-                        <Box
-                          sx={{
-                            border: (theme) =>
-                              `2px solid ${theme.palette.primary.dark}`,
-                            padding: 1,
-                            borderRadius: 2,
-                            marginTop: 1,
-                          }}
-                        >
-                          <Grid
-                            container
-                            spacing={2}
-                            alignItems="center"
-                            justifyContent="center"
-                          >
-                            <Grid item xs={12} sm={12} md={11} lg={11} xl={11}>
-                              <Typography>
-                                Nome: <b>{item.name}</b>
-                              </Typography>
-                              <Typography>
-                                CPF: <b>{item.cpf}</b>
-                              </Typography>
-                              <Typography>
-                                Telefone: <b>{item.phone}</b>
-                              </Typography>
-                              <Typography>
-                                E-Mail: <b>{item.email}</b>
-                              </Typography>
-                            </Grid>
-                            <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
-                              <Tooltip title="Clique para excluir o morador">
-                                <IconButton
-                                  size="large"
-                                  sx={{
-                                    color: (theme) =>
-                                      ` ${theme.palette.error.main}`,
-                                  }}
-                                  onClick={() => {
-                                    setShowDeleteResidentControl(true);
-                                    setResidentToDelete({
-                                      id: item.id ? item.id : "",
-                                      cpf: item.cpf,
-                                    });
-                                  }}
-                                >
-                                  <DeleteForever />
-                                </IconButton>
-                              </Tooltip>
-                            </Grid>
-                          </Grid>
-                        </Box>
-                      )}
-                    </Grid>
-                  ))}
+                        )}
+                      </Grid>
+                    ))}
+                </Grid>
               </Grid>
-            </Grid>
-          </Paper>
+            </Paper>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
+
       <Dialog
         open={showResidentModal}
         onClose={() => {

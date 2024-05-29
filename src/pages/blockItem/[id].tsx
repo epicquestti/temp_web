@@ -17,12 +17,15 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { ChangeEvent, useEffect, useState } from "react";
+import LoagindGridGif from "../../components/DataGridV2/components/assets/loading.gif";
 
 export default function BlockItem() {
   const [loading, setLoading] = useState<boolean>(false);
+  const [screenLoading, setScreenLoading] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [allowEditing, setAllowEditing] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
@@ -72,19 +75,26 @@ export default function BlockItem() {
   const id = router.query.id;
 
   const initialSetup = async () => {
-    const controllerResponse = await fetchApi.get(`/blocks/${id}`, {
-      headers: {
-        "router-id": "WEB#API",
-        Authorization: context.getToken(),
-      },
-    });
+    try {
+      setScreenLoading(true);
+      const controllerResponse = await fetchApi.get(`/blocks/${id}`, {
+        headers: {
+          "router-id": "WEB#API",
+          Authorization: context.getToken(),
+        },
+      });
 
-    console.log("controllerResponse", controllerResponse);
+      console.log("controllerResponse", controllerResponse);
 
-    if (controllerResponse.success) {
-      setBlockState(controllerResponse.data.block);
-      setHabitationsArray(controllerResponse.data.habitations);
-      setCondominium(controllerResponse.data.condominium);
+      if (controllerResponse.success) {
+        setBlockState(controllerResponse.data.block);
+        setHabitationsArray(controllerResponse.data.habitations);
+        setCondominium(controllerResponse.data.condominium);
+      }
+      setScreenLoading(false);
+    } catch (error: any) {
+      setScreenLoading(false);
+      console.log(error.message);
     }
   };
 
@@ -333,224 +343,245 @@ export default function BlockItem() {
       }}
       title="Blocos"
     >
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Paper sx={{ p: 3 }}>
-            {JSON.stringify(blockState)}
-            <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Grid item xs={12} sm={12} md={8} lg={8} xl={8}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="h4">Dados do Bloco</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                  }}
-                >
-                  <Button
-                    endIcon={<Edit />}
-                    variant="contained"
-                    onClick={() => {
-                      setAllowEditing(!allowEditing);
+      {screenLoading ? (
+        <Grid container spacing={2} justifyContent="center" alignItems="center">
+          <Box sx={{ marginTop: "20%" }}>
+            <Image
+              src={LoagindGridGif}
+              alt="GIF de carregamento"
+              width={250}
+              height={250}
+              priority
+            />
+          </Box>
+        </Grid>
+      ) : (
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+            <Paper sx={{ p: 3 }}>
+              <Grid
+                container
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Grid item xs={12} sm={12} md={8} lg={8} xl={8}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "flex-start",
+                      alignItems: "center",
                     }}
                   >
-                    Editar
-                  </Button>
-                </Box>
-              </Grid>
-              {allowEditing ? (
-                <>
-                  {JSON.stringify(blockState)}
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <TextField
-                      variant="outlined"
-                      label="Nome do Bloco"
-                      InputLabelProps={{ shrink: true }}
-                      onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                        setBlockState((prev) => ({
-                          ...prev,
-                          name: event?.target.value,
-                        }));
-                      }}
-                      value={blockState.name}
-                      inputProps={{ readOnly: !allowEditing }}
-                      fullWidth
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                    <Typography variant="h4">Dados do Bloco</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={12} md={4} lg={4} xl={4}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                    }}
+                  >
                     <Button
-                      fullWidth
+                      endIcon={<Edit />}
                       variant="contained"
-                      startIcon={<Save />}
-                      type="submit"
-                      onClick={() => updateBlock()}
-                    >
-                      Salvar
-                    </Button>
-                  </Grid>
-                </>
-              ) : (
-                <>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      Nome: <b>{blockState.name}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
-                    <Typography>
-                      Condomínio: <b>{condominium.name}</b>
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<Save />}
-                      type="submit"
                       onClick={() => {
-                        updateBlock();
+                        setAllowEditing(!allowEditing);
                       }}
                     >
-                      Salvar
+                      Editar
                     </Button>
-                  </Grid>
-                </>
-              )}
-            </Grid>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Paper sx={{ p: 3 }}>
-            <Grid
-              container
-              spacing={2}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                <Grid
-                  container
-                  spacing={2}
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
-                    <Typography variant="h4">Habitações do Bloco</Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
-                    <Tooltip title="Adicionar Habitação">
-                      <Box
-                        sx={{
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          alignItems: "center",
+                  </Box>
+                </Grid>
+                {allowEditing ? (
+                  <>
+                    {JSON.stringify(blockState)}
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <TextField
+                        variant="outlined"
+                        label="Nome do Bloco"
+                        InputLabelProps={{ shrink: true }}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                          setBlockState((prev) => ({
+                            ...prev,
+                            name: event?.target.value,
+                          }));
+                        }}
+                        value={blockState.name}
+                        inputProps={{ readOnly: !allowEditing }}
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<Save />}
+                        type="submit"
+                        onClick={() => updateBlock()}
+                      >
+                        Salvar
+                      </Button>
+                    </Grid>
+                  </>
+                ) : (
+                  <>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        Nome: <b>{blockState.name}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
+                      <Typography>
+                        Condomínio: <b>{condominium.name}</b>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<Save />}
+                        type="submit"
+                        onClick={() => {
+                          updateBlock();
                         }}
                       >
-                        <Fab
-                          color="primary"
-                          aria-label="add"
-                          onClick={() => setShowHabitationModal(true)}
-                        >
-                          <Add />
-                        </Fab>
-                      </Box>
-                    </Tooltip>
-                  </Grid>
-                </Grid>
-                {habitationsArray.length > 0 &&
-                  habitationsArray.map((item, index) => {
-                    const url = `/habitationItem/${item.habitationId}`;
-                    return (
-                      <Grid
-                        item
-                        xs={12}
-                        sm={12}
-                        md={12}
-                        lg={12}
-                        xl={12}
-                        key={index}
-                      >
+                        Salvar
+                      </Button>
+                    </Grid>
+                  </>
+                )}
+              </Grid>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+            <Paper sx={{ p: 3 }}>
+              <Grid
+                container
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                  <Grid
+                    container
+                    spacing={2}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Grid item xs={12} sm={12} md={10} lg={10} xl={10}>
+                      <Typography variant="h4">Habitações do Bloco</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
+                      <Tooltip title="Adicionar Habitação">
                         <Box
                           sx={{
-                            border: (theme) =>
-                              `2px solid ${theme.palette.primary.dark}`,
-                            padding: 1,
-                            borderRadius: 2,
-                            marginTop: 1,
+                            width: "100%",
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            alignItems: "center",
                           }}
                         >
-                          <Grid
-                            container
-                            spacing={2}
-                            alignItems="center"
-                            justifyContent="center"
+                          <Fab
+                            color="primary"
+                            aria-label="add"
+                            onClick={() => setShowHabitationModal(true)}
                           >
-                            <Grid item xs={12} sm={12} md={11} lg={11} xl={11}>
-                              <Link
-                                href={url}
-                                style={{
-                                  textDecoration: "none",
-                                  color: "#000",
-                                }}
-                              >
-                                <Tooltip title="Clique para visualizar a habitação">
-                                  <Typography>
-                                    Nome: <b>{item.habitationName}</b>
-                                  </Typography>
-                                </Tooltip>
-                              </Link>
-                            </Grid>
-
-                            <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
-                              <IconButton
-                                size="large"
-                                sx={{
-                                  color: (theme) =>
-                                    ` ${theme.palette.error.main}`,
-                                }}
-                                onClick={() => {
-                                  setShowDeleteHabitationControl(true);
-                                  setHabitationToDelete((prev) => ({
-                                    ...prev,
-                                    habitationName: item.habitationName,
-                                    habitationId: item.habitationId
-                                      ? item.habitationId
-                                      : "",
-                                    index: index,
-                                  }));
-                                }}
-                              >
-                                <DeleteForever />
-                              </IconButton>
-                            </Grid>
-                          </Grid>
+                            <Add />
+                          </Fab>
                         </Box>
-                      </Grid>
-                    );
-                  })}
+                      </Tooltip>
+                    </Grid>
+                  </Grid>
+                  {habitationsArray.length > 0 &&
+                    habitationsArray.map((item, index) => {
+                      const url = `/habitationItem/${item.habitationId}`;
+                      return (
+                        <Grid
+                          item
+                          xs={12}
+                          sm={12}
+                          md={12}
+                          lg={12}
+                          xl={12}
+                          key={index}
+                        >
+                          <Box
+                            sx={{
+                              border: (theme) =>
+                                `2px solid ${theme.palette.primary.dark}`,
+                              padding: 1,
+                              borderRadius: 2,
+                              marginTop: 1,
+                            }}
+                          >
+                            <Grid
+                              container
+                              spacing={2}
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              <Grid
+                                item
+                                xs={12}
+                                sm={12}
+                                md={11}
+                                lg={11}
+                                xl={11}
+                              >
+                                <Link
+                                  href={url}
+                                  style={{
+                                    textDecoration: "none",
+                                    color: "#000",
+                                  }}
+                                >
+                                  <Tooltip title="Clique para visualizar a habitação">
+                                    <Typography>
+                                      Nome: <b>{item.habitationName}</b>
+                                    </Typography>
+                                  </Tooltip>
+                                </Link>
+                              </Grid>
+
+                              <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
+                                <IconButton
+                                  size="large"
+                                  sx={{
+                                    color: (theme) =>
+                                      ` ${theme.palette.error.main}`,
+                                  }}
+                                  onClick={() => {
+                                    setShowDeleteHabitationControl(true);
+                                    setHabitationToDelete((prev) => ({
+                                      ...prev,
+                                      habitationName: item.habitationName,
+                                      habitationId: item.habitationId
+                                        ? item.habitationId
+                                        : "",
+                                      index: index,
+                                    }));
+                                  }}
+                                >
+                                  <DeleteForever />
+                                </IconButton>
+                              </Grid>
+                            </Grid>
+                          </Box>
+                        </Grid>
+                      );
+                    })}
+                </Grid>
               </Grid>
-            </Grid>
-          </Paper>
+            </Paper>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
+
       <Dialog
         open={showHabitationModal}
         onClose={() => {

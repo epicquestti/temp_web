@@ -11,10 +11,16 @@ export type speedDialProps = {
 
 export default function SpeedDialButton(props: speedDialProps) {
   return (
-    <Box sx={{ height: 330, transform: "translateZ(0px)", flexGrow: 1 }}>
+    <Box
+      sx={{
+        height: 100,
+        transform: "translateZ(0px)",
+        flexGrow: 1,
+      }}
+    >
       <SpeedDial
         ariaLabel="Speed Dial"
-        // direction="left"
+        direction="left"
         sx={{
           position: "absolute",
           bottom: 16,
@@ -24,12 +30,7 @@ export default function SpeedDialButton(props: speedDialProps) {
       >
         {props.actions.length > 0 &&
           props.actions.map((item, index) => (
-            <SpeedDialAction
-              key={item.name}
-              icon={item.icon}
-              tooltipTitle={item.name}
-              tooltipOpen
-            />
+            <SpeedDialAction icon={item.icon} key={item.name} />
           ))}
       </SpeedDial>
     </Box>
