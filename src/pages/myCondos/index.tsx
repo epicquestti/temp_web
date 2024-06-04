@@ -234,7 +234,7 @@ export default function MyCondos() {
                     </Grid>
                     <Grid item xs={12} sm={12} md={2} lg={2} xl={2}>
                       <Tooltip title="Utilizar esta Chave">
-                        <Link href={`/planSignPage/${item.value}`}>
+                        <Link href={`/condoRegister/${item.id}`}>
                           <IconButton
                             sx={{
                               color: (theme) => `${theme.palette.primary.dark}`,
