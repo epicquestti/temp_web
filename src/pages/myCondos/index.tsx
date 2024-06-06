@@ -1,7 +1,7 @@
 import ViewWrapper from "@/components/ViewWrapper";
 import { useApplicationContext } from "@/context/ApplicationContext";
 import fetchApi from "@/lib/fetchApi";
-import { CopyAll, Home } from "@mui/icons-material";
+import { CopyAll, DeleteForever, Home } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -22,16 +22,23 @@ import { useEffect, useState } from "react";
 import LoagindGridGif from "../../components/DataGridV2/components/assets/loading.gif";
 
 export default function MyCondos() {
+  const [alertMessage, setAlertMessage] = useState<string>("");
+  const [showAlert, setShowAlert] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [screenLoading, setScreenLoading] = useState<boolean>(false);
-  const [showAlert, setShowAlert] = useState<boolean>(false);
   const [showSubscription, setShowSubscription] = useState<boolean>(false);
-  const [alertMessage, setAlertMessage] = useState<string>("");
+  const [showFirstDeleteQuestion, setShowFirstDeleteQuestion] =
+    useState<boolean>(false);
+  const [showSecondDeleteQuestion, setShowSecondDeleteQuestion] =
+    useState<boolean>(false);
 
-  const [condosArray, setCondosArray] = useState<any[]>([]);
   const [contractorKeys, setContractorKeys] = useState<
     { id: string; value: string }[]
   >([]);
+  const [condosArray, setCondosArray] = useState<any[]>([]);
+  const [condoToDelete, setCondoToDelete] = useState<{ id: string }>({
+    id: "",
+  });
 
   const context = useApplicationContext();
 
@@ -76,6 +83,46 @@ export default function MyCondos() {
 
   const addCondo = async () => {
     setShowSubscription(true);
+  };
+
+  const deleteCondo = async () => {
+    try {
+      setScreenLoading(true);
+      setShowSecondDeleteQuestion(false);
+
+      const deleteResponse = await fetchApi.del(
+        `/condominium/delete/${condoToDelete.id}`,
+        {
+          headers: {
+            Authorization: context.getToken(),
+            "router-id": "WEB#API",
+          },
+        }
+      );
+
+      console.log(deleteResponse);
+
+      if (deleteResponse.success) {
+        setScreenLoading(false);
+        await initialSetup();
+        setAlertMessage("Condomínio excluído com sucesso");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+      } else {
+        setAlertMessage("Erro ao excluir Condomínio");
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+      }
+
+      setScreenLoading(false);
+    } catch (error: any) {
+      setScreenLoading(false);
+      console.log(error.message);
+    }
   };
 
   return (
@@ -163,32 +210,68 @@ export default function MyCondos() {
                         xl={12}
                         key={index}
                       >
-                        <Tooltip title="Clique para visualizar o condomínio">
-                          <Link
-                            href={`/condoItem/${item.id}`}
-                            style={{
-                              textDecoration: "none",
-                              color: "#000",
-                            }}
+                        <Box
+                          sx={{
+                            border: (theme) =>
+                              `2px solid ${theme.palette.primary.dark}`,
+                            padding: 1,
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Grid
+                            container
+                            spacing={2}
+                            alignItems="center"
+                            justifyContent="center"
                           >
-                            <Box
-                              sx={{
-                                border: (theme) =>
-                                  `2px solid ${theme.palette.primary.dark}`,
-                                padding: 1,
-                                borderRadius: 2,
-                              }}
-                            >
-                              <Typography sx={{ fontWeight: "bold" }}>
-                                {item.name}
-                              </Typography>
-                              <Typography sx={{ fontWeight: "bold" }}>
-                                {item.street}, {item.streetNumber} - {item.city}
-                                -{item.state}
-                              </Typography>
-                            </Box>
-                          </Link>
-                        </Tooltip>
+                            <Tooltip title="Clique para visualizar o condomínio">
+                              <Grid
+                                item
+                                xs={12}
+                                sm={12}
+                                md={11}
+                                lg={11}
+                                xl={11}
+                              >
+                                <Link
+                                  href={`/condoItem/${item.id}`}
+                                  style={{
+                                    textDecoration: "none",
+                                    color: "#000",
+                                  }}
+                                >
+                                  <Typography sx={{ fontWeight: "bold" }}>
+                                    {item.name}
+                                  </Typography>
+                                  <Typography sx={{ fontWeight: "bold" }}>
+                                    {item.street}, {item.streetNumber} -{" "}
+                                    {item.city}-{item.state}
+                                  </Typography>
+                                </Link>
+                              </Grid>
+                            </Tooltip>
+
+                            <Grid item xs={1} sm={1} md={1} lg={1} xl={1}>
+                              <Tooltip title="Clique para excluir o condomínio">
+                                <IconButton
+                                  size="large"
+                                  sx={{
+                                    color: (theme) =>
+                                      ` ${theme.palette.error.main}`,
+                                  }}
+                                  onClick={() => {
+                                    setShowFirstDeleteQuestion(true);
+                                    setCondoToDelete({
+                                      id: item.id,
+                                    });
+                                  }}
+                                >
+                                  <DeleteForever />
+                                </IconButton>
+                              </Tooltip>
+                            </Grid>
+                          </Grid>
+                        </Box>
                       </Grid>
                     ))
                   ) : (
@@ -272,6 +355,67 @@ export default function MyCondos() {
               Obter Chave
             </Button>
           </Link>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={showFirstDeleteQuestion}
+        onClose={() => {
+          setShowFirstDeleteQuestion(false);
+        }}
+      >
+        <DialogTitle id="alert-dialog-title">
+          Esta é uma ação irreversível. Tem certeza que deseja excluir o
+          condomínio?
+        </DialogTitle>
+
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowFirstDeleteQuestion(false);
+            }}
+            variant="contained"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              setShowSecondDeleteQuestion(true);
+            }}
+            autoFocus
+          >
+            Excluir Condomínio
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={showSecondDeleteQuestion}
+        onClose={() => {
+          setShowSecondDeleteQuestion(false);
+        }}
+      >
+        <DialogTitle id="alert-dialog-title">
+          Esta é sua última chance. Tem certeza que deseja excluir
+          permanentemente o condomínio e todas as moradias associadas?
+        </DialogTitle>
+
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowSecondDeleteQuestion(false);
+            }}
+            variant="contained"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              setShowFirstDeleteQuestion(false);
+              deleteCondo();
+            }}
+            autoFocus
+          >
+            Excluir Condomínio
+          </Button>
         </DialogActions>
       </Dialog>
     </ViewWrapper>
