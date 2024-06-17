@@ -158,6 +158,8 @@ export default function CondoItem() {
         }
       );
 
+      console.log("controllerResponse", controllerResponse);
+
       if (controllerResponse.success) {
         setCondoName(controllerResponse.data.condo.name);
         setCondoItem(controllerResponse.data.condo);
@@ -1006,7 +1008,10 @@ export default function CondoItem() {
                     {habitationsArray &&
                       habitationsArray.length > 0 &&
                       habitationsArray.map((item, index) => {
-                        const url = `/habitationItem/${item.habitationId}`;
+                        const url =
+                          item.habitationId !== null
+                            ? `/habitationItem/${item.habitationId}`
+                            : "";
                         return (
                           <Grid
                             item

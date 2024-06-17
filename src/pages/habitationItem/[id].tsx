@@ -98,22 +98,23 @@ export default function HabitationItem() {
           Authorization: context.getToken(),
         },
       });
+      console.log("controllerResponse", controllerResponse);
 
       if (controllerResponse.success) {
         const data = controllerResponse.data;
         setHabitation({
-          habitationId: data.habitation[0].habitationId,
-          habitationName: data.habitation[0].habitationName,
+          habitationId: data.habitation.habitationId,
+          habitationName: data.habitation.habitationName,
         });
         setCondo((prev) => ({
           ...prev,
-          condoId: data.habitation[0].condominiumId,
-          condoName: data.habitation[0].condominiumName,
+          condoId: data.habitation.condominiumId,
+          condoName: data.habitation.condominiumName,
         }));
         setBlock((prev) => ({
           ...prev,
-          blockId: data.habitation[0].blockId,
-          blockName: data.habitation[0].blockName,
+          blockId: data.habitation.blockId,
+          blockName: data.habitation.blockName,
         }));
         if (controllerResponse.data.residents.length > 0) {
           setResidentsArray(data.residents);
