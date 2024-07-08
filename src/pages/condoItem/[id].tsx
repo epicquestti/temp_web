@@ -158,8 +158,6 @@ export default function CondoItem() {
         }
       );
 
-      console.log("controllerResponse", controllerResponse);
-
       if (controllerResponse.success) {
         setCondoName(controllerResponse.data.condo.name);
         setCondoItem(controllerResponse.data.condo);
